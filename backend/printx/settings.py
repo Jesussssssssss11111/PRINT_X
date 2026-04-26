@@ -161,6 +161,8 @@ CORS_ALLOWED_ORIGINS = [
     'http://127.0.0.1:8000',
     'https://jesussssssssss11111.github.io',
     'https://print-x-backend-5yzm.onrender.com',
+    'https://www.print-x.online',
+    'https://print-x.online',
 ]
 
 CORS_ALLOW_ALL_ORIGINS = False
@@ -172,9 +174,9 @@ CSRF_TRUSTED_ORIGINS = [
     'http://127.0.0.1:8000',
     'https://jesussssssssss11111.github.io',
     'https://print-x-backend-5yzm.onrender.com',
+    'https://www.print-x.online',
+    'https://print-x.online',
 ]
-
-CORS_URLS_REGEX = r'^/api/.*$'
 
 # ── File upload limits ──────────────────────────────────────────────────────
 DATA_UPLOAD_MAX_MEMORY_SIZE = 52428800   # 50 MB
