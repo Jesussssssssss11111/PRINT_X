@@ -187,9 +187,14 @@
     @media (max-width: 768px) {
       .about-hero-inner { grid-template-columns: 1fr; }
       .about-visual { display: none; }
+      .developers-grid { grid-template-columns: repeat(2, 1fr); gap: 20px; }
+      .dev-img { height: 200px; }
     }
     @media (max-width: 480px) {
-      .dev-img { height: 150px; }
+      .developers-grid { grid-template-columns: repeat(2, 1fr); gap: 14px; }
+      .dev-img { height: 160px; }
+      .dev-name { font-size: 0.78rem; }
+      .dev-role { font-size: 0.72rem; }
     }
   </style>
 </head>
