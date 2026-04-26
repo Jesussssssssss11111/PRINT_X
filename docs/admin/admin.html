@@ -899,12 +899,12 @@ Auth.logout = function() { this.clearSession(); };
   if (!isFormData) headers['Content-Type'] = 'application/json';
 
   try {
-    const res = await fetch(`http://127.0.0.1:8000/api${endpoint}`, { ...options, headers });
+    const res = await fetch(`${API_BASE}${endpoint}`, { ...options, headers });
 
     if (res.status === 401 && !_retry) {
       const refresh = Auth.getRefresh();
       if (refresh) {
-        const r = await fetch('http://127.0.0.1:8000/api/token/refresh/', {
+        const r = await fetch(`${API_BASE}/token/refresh/`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ refresh }),
