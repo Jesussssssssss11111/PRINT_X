@@ -114,11 +114,16 @@ Backend Architecture:
 
 Database System:
 ----------------
-- SQLite3
+- PostgreSQL (Production)
+  * Hosted on Render PostgreSQL
+  * Persistent cloud database
+  * ACID compliant
+  * Suitable for small to large applications
+  * Connected via DATABASE_URL environment variable
+
+- SQLite3 (Local Development)
   * Lightweight file-based database
   * Zero configuration
-  * ACID compliant
-  * Suitable for small to medium applications
   * Database file: db.sqlite3
 
 ORM (Object-Relational Mapping):
@@ -298,12 +303,8 @@ Backend Hosting:
 
 Database:
 ---------
-- SQLite for development
-- Can migrate to:
-  * PostgreSQL (recommended for production)
-  * MySQL
-  * MariaDB
-  * Any Django-supported database
+- PostgreSQL (production) — Render PostgreSQL
+- SQLite (local development)
 
 Static Files:
 -------------
