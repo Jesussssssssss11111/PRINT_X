@@ -144,7 +144,7 @@ function formatDate(dateStr) {
 function getDisplayName(userData) {
   if (!userData) return 'Customer';
   const u = userData.user || userData;
-  return u.first_name || u.username || 'Customer';
+  return u.username || u.first_name || 'Customer';
 }
 
 /* ── Path Resolution ─────────────────────────────────────*/
