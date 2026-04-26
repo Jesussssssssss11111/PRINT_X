@@ -174,6 +174,8 @@ CSRF_TRUSTED_ORIGINS = [
     'https://print-x-backend-5yzm.onrender.com',
 ]
 
+CORS_URLS_REGEX = r'^/api/.*$'
+
 # ── File upload limits ──────────────────────────────────────────────────────
 DATA_UPLOAD_MAX_MEMORY_SIZE = 52428800   # 50 MB
 FILE_UPLOAD_MAX_MEMORY_SIZE = 52428800   # 50 MB
