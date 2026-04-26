@@ -226,6 +226,13 @@ def user_profile(request):
     data = request.data
 
     # Update User model fields
+    if 'username' in data:
+        username = data['username'].strip()
+        if username != user.username:
+            if User.objects.filter(username__iexact=username).exclude(id=user.id).exists():
+                return Response({'error': 'This username is already taken.'},
+                                status=status.HTTP_400_BAD_REQUEST)
+            user.username = username
     if 'first_name' in data:
         user.first_name = data['first_name'].strip()
     if 'last_name' in data:
