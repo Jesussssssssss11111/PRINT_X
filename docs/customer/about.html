@@ -119,20 +119,21 @@
     /* Team */
     .developers-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
       gap: 30px;
     }
 
     .dev-img {
       width: 100%;
-      height: 250px;
+      height: auto;
+      aspect-ratio: 3/4;
       object-fit: cover;
+      object-position: top;
       border-radius: var(--radius-lg);
       transition: all var(--transition);
       border: 2px solid var(--gray-mid);
       display: block;
       margin: 0 auto;
-      
     }
 
     .dev-img:hover {
@@ -144,6 +145,7 @@
     .dev-card {
       text-align: center;
       height: auto;
+      cursor: pointer;
     }
 
     .dev-card figcaption {
@@ -162,6 +164,85 @@
     .dev-role {
       color: var(--red);
       font-size: 0.82rem;
+      font-weight: 600;
+    }
+
+    /* Dev Modal */
+    .dev-modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.75);
+      z-index: 9999;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+
+    .dev-modal-overlay.open { display: flex; }
+
+    .dev-modal {
+      background: white;
+      border-radius: var(--radius-lg);
+      max-width: 420px;
+      width: 100%;
+      overflow: hidden;
+      box-shadow: 0 32px 80px rgba(0,0,0,0.4);
+      animation: popIn 0.25s ease;
+    }
+
+    @keyframes popIn {
+      from { transform: scale(0.9); opacity: 0; }
+      to   { transform: scale(1);   opacity: 1; }
+    }
+
+    .dev-modal-img {
+      width: 100%;
+      height: 320px;
+      object-fit: cover;
+      object-position: top;
+      display: block;
+    }
+
+    .dev-modal-body {
+      padding: 24px;
+      text-align: center;
+    }
+
+    .dev-modal-name {
+      font-family: 'Orbitron', monospace;
+      font-size: 1.1rem;
+      font-weight: 900;
+      color: var(--dark);
+      margin-bottom: 4px;
+    }
+
+    .dev-modal-role {
+      color: var(--red);
+      font-size: 0.85rem;
+      font-weight: 600;
+      margin-bottom: 16px;
+    }
+
+    .dev-modal-motto {
+      font-size: 0.9rem;
+      color: var(--gray-text);
+      line-height: 1.7;
+      font-style: italic;
+      border-left: 3px solid var(--red);
+      padding-left: 14px;
+      text-align: left;
+      margin-bottom: 20px;
+    }
+
+    .dev-modal-close {
+      background: var(--red);
+      color: white;
+      border: none;
+      padding: 10px 28px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 0.88rem;
       font-weight: 600;
     }
 
@@ -310,35 +391,35 @@
         <div class="line"></div>
       </div>
 <div class="developers-grid">
-        <figure class="dev-card">
+        <figure class="dev-card" onclick="openDevModal('img/member 1.jpg','Cassandra Teologia','Full Stack Developer','Code is not just logic — it is art, and every line tells a story.')">
           <img src="img/member 1.jpg" alt="Cassandra Teologia" class="dev-img">
           <figcaption>
             <h4 class="dev-name">Cassandra</h4>
             <p class="dev-role">Full Stack Developer</p>
           </figcaption>
         </figure>
-        <figure class="dev-card">
+        <figure class="dev-card" onclick="openDevModal('img/member  4.jpg','Iannis Bayla','UI Developer/Designer','Design is not just what it looks like — design is how it works.')">
           <img src="img/member  4.jpg" alt="Iannis Bayla" class="dev-img">
           <figcaption>
             <h4 class="dev-name">Iannis Bayla</h4>
             <p class="dev-role">UI Developer/Designer</p>
           </figcaption>
         </figure>
-        <figure class="dev-card">
+        <figure class="dev-card" onclick="openDevModal('img/member 2.jpg','Jerome Laca','Back End/Database Developer','Behind every great app is a database that never sleeps.')">
           <img src="img/member 2.jpg" alt="Jerome Laca" class="dev-img">
           <figcaption>
             <h4 class="dev-name">Jerome Laca</h4>
             <p class="dev-role">Back End/Database Developer</p>
           </figcaption>
         </figure>
-        <figure class="dev-card">
+        <figure class="dev-card" onclick="openDevModal('img/member 3.jpg','Kc Lacaran','UI Developer/Designer','Good design is invisible — great design is unforgettable.')">
           <img src="img/member 3.jpg" alt="Kc Lacaran" class="dev-img">
           <figcaption>
             <h4 class="dev-name">Kc Lacaran</h4>
             <p class="dev-role">UI Developer/Designer</p>
           </figcaption>
         </figure>
-        <figure class="dev-card">
+        <figure class="dev-card" onclick="openDevModal('img/member 5.jpg','Jesus Credo','Back End Developer','Build systems that scale, write code that lasts.')">
           <img src="img/member 5.jpg" alt="Jesus Credo" class="dev-img">
           <figcaption>
             <h4 class="dev-name">Jesus Credo</h4>
@@ -395,11 +476,36 @@
     </div>
   </section>
 
+  <!-- Dev Modal -->
+  <div class="dev-modal-overlay" id="devModal" onclick="closeDevModal(event)">
+    <div class="dev-modal">
+      <img id="devModalImg" src="" alt="" class="dev-modal-img">
+      <div class="dev-modal-body">
+        <div class="dev-modal-name" id="devModalName"></div>
+        <div class="dev-modal-role" id="devModalRole"></div>
+        <div class="dev-modal-motto" id="devModalMotto"></div>
+        <button class="dev-modal-close" onclick="document.getElementById('devModal').classList.remove('open')">Close</button>
+      </div>
+    </div>
+  </div>
+
   <footer class="footer" id="footer"></footer>
   <div class="toast-container"></div>
   <script src="../assets/js/script.js"></script>
   <script>
     renderNavbar('about');
+    function openDevModal(img, name, role, motto) {
+      document.getElementById('devModalImg').src = img;
+      document.getElementById('devModalName').textContent = name;
+      document.getElementById('devModalRole').textContent = role;
+      document.getElementById('devModalMotto').textContent = '\u201c' + motto + '\u201d';
+      document.getElementById('devModal').classList.add('open');
+    }
+    function closeDevModal(e) {
+      if (e.target === document.getElementById('devModal')) {
+        document.getElementById('devModal').classList.remove('open');
+      }
+    }
   </script>
 </body>
 </html>
