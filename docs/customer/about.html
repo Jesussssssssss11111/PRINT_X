@@ -215,8 +215,9 @@
     }
 
     @media (max-width: 540px) {
-      .dev-modal { flex-direction: column; }
-      .dev-modal-img { width: 100%; min-width: unset; height: 260px; }
+      .dev-modal { flex-direction: column; max-width: 340px; }
+      .dev-modal-img { width: 100%; min-width: unset; height: auto; max-height: 280px; object-fit: contain; background: #f0f2f5; }
+      .dev-modal-body { padding: 18px 16px; }
     }
 
     .dev-modal-body {
