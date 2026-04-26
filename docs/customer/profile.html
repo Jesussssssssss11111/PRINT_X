@@ -350,62 +350,61 @@
       const file = event.target.files[0];
       if (!file) return;
 
-      // Validate file type
       if (!file.type.startsWith('image/')) {
         Toast.error('Please select an image file.');
         return;
       }
 
-      // Validate file size (max 5MB)
       if (file.size > 5 * 1024 * 1024) {
         Toast.error('Image size must be less than 5MB.');
         return;
       }
 
-      // Show loading state
       const avatarPlaceholder = document.getElementById('avatarPlaceholder');
       avatarPlaceholder.textContent = '⏳';
 
-      // Convert to base64
-      const reader = new FileReader();
-      reader.onload = async function(e) {
-        const base64Image = e.target.result;
-        
-        // Update profile with new image
+      try {
+        // Upload to Cloudinary
+        const formData = new FormData();
+        formData.append('file', file);
+        formData.append('upload_preset', 'printx_profiles');
+
+        const cloudRes = await fetch('https://api.cloudinary.com/v1_1/dghdohrjt/image/upload', {
+          method: 'POST',
+          body: formData,
+        });
+
+        if (!cloudRes.ok) throw new Error('Cloudinary upload failed');
+
+        const cloudData = await cloudRes.json();
+        const imageUrl = cloudData.secure_url;
+
+        // Save URL to backend
         const res = await apiFetch('/profile/', {
           method: 'PATCH',
-          body: JSON.stringify({ profile_picture: base64Image }),
+          body: JSON.stringify({ profile_picture: imageUrl }),
         });
 
         if (res.ok) {
           Toast.success('Profile picture updated!');
-          // Update display
           const avatarImage = document.getElementById('avatarImage');
-          avatarImage.src = base64Image;
+          avatarImage.src = imageUrl;
           avatarImage.style.display = 'block';
           avatarPlaceholder.style.display = 'none';
-          
-          // Update localStorage for navbar
+
           const currentProfile = JSON.parse(localStorage.getItem('px_profile') || '{}');
-          currentProfile.profile_picture = base64Image;
+          currentProfile.profile_picture = imageUrl;
           localStorage.setItem('px_profile', JSON.stringify(currentProfile));
-          
-          // Refresh navbar to show new picture
-          if (typeof renderNavbar === 'function') {
-            renderNavbar(getActivePage());
-          }
+
+          if (typeof renderNavbar === 'function') renderNavbar(getActivePage());
         } else {
-          Toast.error('Failed to update profile picture.');
+          Toast.error('Failed to save profile picture.');
           avatarPlaceholder.textContent = '👤';
         }
-      };
-
-      reader.onerror = function() {
-        Toast.error('Failed to read image file.');
+      } catch (err) {
+        Toast.error('Failed to upload image. Try again.');
         avatarPlaceholder.textContent = '👤';
-      };
-
-      reader.readAsDataURL(file);
+      }
     }
 
     async function updateProfile(event) {
