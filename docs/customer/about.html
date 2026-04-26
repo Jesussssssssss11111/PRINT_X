@@ -1,0 +1,400 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>About – Print X</title>
+  <link rel="stylesheet" href="../assets/css/style.css" />
+  <style>
+    .about-hero {
+      background: var(--dark);
+      padding: 80px 0;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .about-hero::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background:
+        radial-gradient(circle at 10% 50%, rgba(255,0,0,0.1) 0%, transparent 50%),
+        radial-gradient(circle at 90% 50%, rgba(255,0,0,0.07) 0%, transparent 50%);
+    }
+
+    .about-hero-inner {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 64px;
+      align-items: center;
+      position: relative;
+      z-index: 1;
+    }
+
+    .about-hero h1 { color: white; margin-bottom: 20px; }
+    .about-hero p  { color: rgba(255,255,255,0.65); line-height: 1.8; font-size: 1rem; }
+
+    .hero-badge-row {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+      margin-top: 28px;
+    }
+
+    .hero-badge {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: rgba(255,255,255,0.07);
+      border: 1px solid rgba(255,255,255,0.12);
+      padding: 8px 16px;
+      border-radius: 20px;
+      color: rgba(255,255,255,0.75);
+      font-size: 0.82rem;
+    }
+
+    .about-visual {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+    }
+
+    .about-visual-box {
+      background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(255,0,0,0.2);
+      border-radius: var(--radius-lg);
+      padding: 24px;
+      text-align: center;
+    }
+
+    .about-visual-box:first-child {
+      grid-column: 1 / -1;
+      background: rgba(255,0,0,0.08);
+    }
+
+    .about-visual-box .num {
+      font-family: 'Orbitron', monospace;
+      font-size: 2rem;
+      font-weight: 900;
+      color: var(--red);
+      margin-bottom: 4px;
+    }
+
+    .about-visual-box .label {
+      color: rgba(255,255,255,0.5);
+      font-size: 0.78rem;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+    }
+
+    /* Values */
+    .values-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+      gap: 24px;
+    }
+
+    .value-card {
+      padding: 32px 24px;
+      border-radius: var(--radius-lg);
+      border: 1px solid var(--gray-mid);
+      background: var(--white);
+      transition: all var(--transition);
+    }
+
+    .value-card:hover {
+      border-color: rgba(255,0,0,0.25);
+      transform: translateY(-4px);
+      box-shadow: var(--shadow-hover);
+    }
+
+    .value-icon {
+      font-size: 2rem;
+      margin-bottom: 16px;
+    }
+
+    .value-card h3 { margin-bottom: 10px; font-size: 1rem; }
+    .value-card p  { font-size: 0.85rem; color: var(--gray-text); line-height: 1.65; }
+
+    /* Team */
+    .developers-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+      gap: 30px;
+    }
+
+    .dev-img {
+      width: 100%;
+      height: 250px;
+      object-fit: cover;
+      border-radius: var(--radius-lg);
+      transition: all var(--transition);
+      border: 2px solid var(--gray-mid);
+      display: block;
+      margin: 0 auto;
+      
+    }
+
+    .dev-img:hover {
+      transform: scale(1.02);
+      border-color: var(--red);
+      box-shadow: var(--shadow-hover);
+    }
+
+    .dev-card {
+      text-align: center;
+      height: auto;
+    }
+
+    .dev-card figcaption {
+      padding: 20px 8px 0;
+      min-height: 60px;
+    }
+
+    .dev-name {
+      font-family: 'Orbitron', monospace;
+      font-size: 0.95rem;
+      font-weight: 700;
+      margin-bottom: 4px;
+      color: var(--dark);
+    }
+
+    .dev-role {
+      color: var(--red);
+      font-size: 0.82rem;
+      font-weight: 600;
+    }
+
+    /* Tech spec */
+    .tech-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: 20px;
+    }
+
+    .tech-item {
+      background: var(--dark);
+      border-radius: var(--radius-lg);
+      padding: 24px;
+      text-align: center;
+      border: 1px solid rgba(255,0,0,0.15);
+    }
+
+    .tech-item .icon { font-size: 2rem; margin-bottom: 12px; }
+    .tech-item h4    { font-family: 'Orbitron', monospace; color: white; font-size: 0.85rem; margin-bottom: 6px; }
+    .tech-item p     { color: rgba(255,255,255,0.45); font-size: 0.78rem; }
+
+    @media (max-width: 768px) {
+      .about-hero-inner { grid-template-columns: 1fr; }
+      .about-visual { display: none; }
+    }
+    @media (max-width: 480px) {
+      .dev-img { height: 150px; }
+    }
+  </style>
+</head>
+<body>
+  <header class="navbar" id="navbar"></header>
+
+  <!-- ABOUT HERO -->
+  <section class="about-hero">
+    <div class="container">
+      <div class="about-hero-inner">
+        <div>
+          <h1>Turning Digital Designs Into Reality</h1>
+          <p>
+            Print X is a modern web-based online shop in the Philippines
+            that specializes in 3D printing services. We transform
+            digital designs into high-quality physical products
+            and offer customized prints that help both sellers and
+            customers to bring their creative ideas to life.
+          </p>
+          <div class="hero-badge-row">
+            <div class="hero-badge">🇵🇭 Made in the Philippines</div>
+            <div class="hero-badge">⏱️ Quick Processing</div>
+            <div class="hero-badge">💎High Quality</div>
+          </div>
+        </div>
+        <div class="about-visual">
+          <div class="about-visual-box">
+            <div class="num">20+</div>
+            <div class="label">Orders Fulfilled</div>
+          </div>
+          <div class="about-visual-box">
+            <div class="num">5+</div>
+            <div class="label">Color Options</div>
+          </div>
+          <div class="about-visual-box">
+            <div class="num">99%</div>
+            <div class="label">Satisfaction Rate</div>
+          </div>
+          <div class="about-visual-box">
+            <div class="num">3</div>
+            <div class="label">Print Technologies</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- MISSION -->
+  <section class="section" style="background:var(--gray-light);">
+    <div class="container">
+      <div style="max-width:720px;margin:0 auto;text-align:center;">
+        <div class="accent-bar" style="margin:0 auto 20px;"></div>
+        <h2>Our Mission</h2>
+        <p style="font-size:1.05rem;color:var(--gray-text);line-height:1.85;margin-top:16px;">
+         To provide accessible, affordable, and high-quality 3D printing
+         services that transform digital ideas into real-world products,
+         empowering creativity, innovation, design, and bringing ideas
+          to life with Print X.
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <!-- VALUES -->
+  <section class="section">
+    <div class="container">
+      <div class="section-title">
+        <h2>Our Values</h2>
+        <p>What drives everything we do at Print X</p>
+        <div class="line"></div>
+      </div>
+      <div class="values-grid">
+        <div class="value-card">
+          <div class="value-icon">🎯</div>
+          <h3>Reliability</h3>
+          <p>We ensure consistent results and dependable service, so you can trust us to deliver your designs accurately, on time, and with consistent quality every time.</p>
+        </div>
+        <div class="value-card">
+          <div class="value-icon">💎</div>
+          <h3>Quality</h3>
+          <p>We ensure every print is precise and made using high-quality filament. Each print is carefully calibrated and regularly maintained to meet our high standards.</p>
+        </div>
+        <div class="value-card">
+          <div class="value-icon">⚡</div>
+          <h3>Fast Delivery</h3>
+          <p>We value your time. Once your project is completed and shipped, you can expect delivery within 1–3 days.</p>
+        </div>
+        <div class="value-card">
+          <div class="value-icon">💡</div>
+          <h3>Innovation</h3>
+          <p>We continuously upgrade our hardware and software to offer the latest printing technologies, materials, and finishes to our customers.</p>
+        </div>
+        <div class="value-card">
+          <div class="value-icon">🤝</div>
+          <h3>Customer First</h3>
+          <p>Your satisfaction is our priority. We offer revisions, clear communication throughout the process, and a satisfaction guarantee on all orders.</p>
+        </div>
+        <div class="value-card">
+          <div class="value-icon">💰</div>
+          <h3>Fair Pricing</h3>
+          <p>Quality 3D printing shouldn't break the bank. We offer transparent, competitive pricing with no hidden fees — what you see is what you pay.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- TEAM -->
+  <section class="section" style="background:var(--gray-light);">
+    <div class="container">
+      <div class="section-title">
+        <h2>Meet the Team</h2>
+        <p>The passionate people behind Print X</p>
+        <div class="line"></div>
+      </div>
+<div class="developers-grid">
+        <figure class="dev-card">
+          <img src="img/member 1.jpg" alt="Cassandra Teologia" class="dev-img">
+          <figcaption>
+            <h4 class="dev-name">Cassandra</h4>
+            <p class="dev-role">Full Stack Developer</p>
+          </figcaption>
+        </figure>
+        <figure class="dev-card">
+          <img src="img/member  4.jpg" alt="Iannis Bayla" class="dev-img">
+          <figcaption>
+            <h4 class="dev-name">Iannis Bayla</h4>
+            <p class="dev-role">UI Developer/Designer</p>
+          </figcaption>
+        </figure>
+        <figure class="dev-card">
+          <img src="img/member 2.jpg" alt="Jerome Laca" class="dev-img">
+          <figcaption>
+            <h4 class="dev-name">Jerome Laca</h4>
+            <p class="dev-role">Back End/Database Developer</p>
+          </figcaption>
+        </figure>
+        <figure class="dev-card">
+          <img src="img/member 3.jpg" alt="Kc Lacaran" class="dev-img">
+          <figcaption>
+            <h4 class="dev-name">Kc Lacaran</h4>
+            <p class="dev-role">UI Developer/Designer</p>
+          </figcaption>
+        </figure>
+        <figure class="dev-card">
+          <img src="img/member 5.jpg" alt="Jesus Credo" class="dev-img">
+          <figcaption>
+            <h4 class="dev-name">Jesus Credo</h4>
+            <p class="dev-role">Back End Developer</p>
+          </figcaption>
+        </figure>
+      </div>
+      <!-- Edit names/roles manually; add actual images to ../assets/img/ -->
+    </div>
+  </section>
+
+  <!-- TECH SPECS -->
+  <section class="section" style="background:var(--dark);">
+    <div class="container">
+      <div class="section-title">
+        <h2 style="color:white;">Our Technology</h2>
+        <p style="color:rgba(255,255,255,0.5);">State-of-the-art equipment for superior results</p>
+        <div class="line"></div>
+      </div>
+      <div class="tech-grid">
+        <div class="tech-item">
+          <div class="icon">🖨️</div>
+          <h4>Maintenance Printer</h4>
+          <p>Maintaining the cleanliness of the printer ensures smooth operation and produces clean, high-quality prints.</p>
+        </div>
+        <div class="tech-item">
+          <div class="icon">💎</div>
+          <h4>Filament</h4>
+          <p>High-quality PLA and PETG filaments to ensure strong, precise, and reliable 3D prints with excellent surface finish.</p>
+        </div>
+        <div class="tech-item">
+          <div class="icon">🎨</div>
+          <h4>5+ Colors</h4>
+          <p>wide range of up to 5 colors, giving customers different variations to customize, choose, and enhance their 3D printed designs.</p>
+        </div>
+        <div class="tech-item">
+          <div class="icon">📐</div>
+          <h4>Layer: 0.1mm</h4>
+          <p>Print layers as fine as 0.1mm for smooth surfaces and intricate details</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- CTA -->
+  <section style="background:var(--red);padding:60px 0;text-align:center;">
+    <div class="container">
+      <h2 style="color:white;margin-bottom:12px;">Ready to Print Something Amazing?</h2>
+      <p style="color:rgba(255,255,255,0.85);margin-bottom:32px;">Browse our products or submit your custom design today.</p>
+      <div style="display:flex;gap:16px;justify-content:center;flex-wrap:wrap;">
+        <a href="product.html" class="btn btn-white btn-lg" style="background:white;color:var(--red);">Browse Products</a>
+        <a href="custom.html" class="btn btn-lg" style="background:rgba(255,255,255,0.15);color:white;border:2px solid rgba(255,255,255,0.4);">Custom Order</a>
+      </div>
+    </div>
+  </section>
+
+  <footer class="footer" id="footer"></footer>
+  <div class="toast-container"></div>
+  <script src="../assets/js/script.js"></script>
+  <script>
+    renderNavbar('about');
+  </script>
+</body>
+</html>

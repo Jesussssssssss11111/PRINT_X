@@ -1,0 +1,546 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Browse Print X's collection of precision 3D printed products.">
+  <link rel="icon" href="../favicon.ico" type="image/x-icon">
+  <title>Products – Print X</title>
+  <link rel="stylesheet" href="../assets/css/style.css">
+  <style>
+    /* Product Detail Modal */
+    .product-detail-modal {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.8);
+      z-index: 9999;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      backdrop-filter: blur(8px);
+    }
+
+    .product-detail-card {
+      background: white;
+      border-radius: 20px;
+      max-width: 1000px;
+      width: 100%;
+      max-height: 90vh;
+      overflow-y: auto;
+      box-shadow: 0 40px 120px rgba(0,0,0,0.5);
+      animation: modalZoomIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+
+    @keyframes modalZoomIn {
+      from { transform: scale(0.9); opacity: 0; }
+      to { transform: scale(1); opacity: 1; }
+    }
+
+    .product-detail-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 24px 32px;
+      border-bottom: 1px solid var(--gray-mid);
+    }
+
+    .product-detail-header h3 {
+      font-family: var(--font-display);
+      font-size: 1.2rem;
+      font-weight: 700;
+      margin: 0;
+    }
+
+    .modal-close-btn {
+      background: var(--gray-light);
+      border: none;
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      cursor: pointer;
+      font-size: 1.3rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all var(--transition);
+      flex-shrink: 0;
+    }
+
+    .modal-close-btn:hover {
+      background: var(--red);
+      color: white;
+      transform: rotate(90deg);
+    }
+
+    .product-detail-body {
+      padding: 32px;
+    }
+
+    .product-detail-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 40px;
+    }
+
+    .product-detail-img {
+      width: 100%;
+      height: 450px;
+      object-fit: cover;
+      border-radius: var(--radius-lg);
+      background: var(--gray-light);
+      box-shadow: var(--shadow-md);
+    }
+
+    .product-detail-img-placeholder {
+      width: 100%;
+      height: 450px;
+      background: linear-gradient(135deg, var(--gray-light) 0%, var(--gray-mid) 100%);
+      border-radius: var(--radius-lg);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 5rem;
+      box-shadow: var(--shadow-md);
+    }
+
+    .product-detail-info {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .product-detail-name {
+      font-family: var(--font-display);
+      font-size: 2rem;
+      font-weight: 900;
+      margin-bottom: 16px;
+      line-height: 1.2;
+    }
+
+    .product-detail-price {
+      font-family: var(--font-display);
+      font-size: 2.5rem;
+      font-weight: 900;
+      color: var(--red);
+      margin-bottom: 24px;
+    }
+
+    .product-detail-desc {
+      color: var(--gray-text);
+      line-height: 1.8;
+      margin-bottom: 28px;
+      font-size: 1rem;
+    }
+
+    .product-detail-meta {
+      background: var(--gray-light);
+      border-radius: var(--radius-lg);
+      padding: 24px;
+      margin-bottom: 28px;
+    }
+
+    .product-meta-row {
+      display: flex;
+      justify-content: space-between;
+      padding: 12px 0;
+      border-bottom: 1px solid var(--gray-mid);
+    }
+
+    .product-meta-row:last-child {
+      border-bottom: none;
+    }
+
+    .product-meta-row .label {
+      color: var(--gray-text);
+      font-weight: 600;
+      font-size: 0.9rem;
+    }
+
+    .product-meta-row .value {
+      font-weight: 700;
+      font-family: var(--font-mono);
+      font-size: 0.95rem;
+    }
+
+    .product-detail-actions {
+      display: flex;
+      gap: 12px;
+      margin-top: auto;
+    }
+
+    @media (max-width: 900px) {
+      .product-detail-grid {
+        grid-template-columns: 1fr;
+        gap: 28px;
+      }
+      .product-detail-img,
+      .product-detail-img-placeholder {
+        height: 350px;
+      }
+    }
+
+    @media (max-width: 480px) {
+      .product-detail-body {
+        padding: 20px;
+      }
+      .product-detail-name {
+        font-size: 1.5rem;
+      }
+      .product-detail-price {
+        font-size: 2rem;
+      }
+    }
+  </style>
+</head>
+<body>
+
+<header class="navbar" id="navbar"></header>
+<div class="toast-container"></div>
+
+<div class="page-wrapper">
+  <div class="page-header">
+    <div class="container">
+      <span class="section-label">CATALOG</span>
+      <h1>Our <span style="color:var(--red)">Products</span></h1>
+      <p>Browse our collection of precision 3D printed items</p>
+    </div>
+  </div>
+
+  <section class="section">
+    <div class="container">
+      <div class="filters-bar">
+        <input type="text" id="search-input" class="form-control"
+          placeholder="Search products…" style="max-width:320px;" oninput="filterProducts()">
+        <select id="sort-select" class="form-control" style="max-width:200px;" onchange="filterProducts()">
+          <option value="default">Sort: Default</option>
+          <option value="price-asc">Price: Low → High</option>
+          <option value="price-desc">Price: High → Low</option>
+          <option value="name">Name A–Z</option>
+        </select>
+        <span id="product-count" class="font-mono text-gray text-sm"></span>
+      </div>
+
+      <div class="products-grid" id="products-grid">
+        <div class="loading-wrap">
+          <div class="spinner"></div>
+          <span>Loading products…</span>
+        </div>
+      </div>
+    </div>
+  </section>
+</div>
+
+<footer class="footer" id="footer"></footer>
+
+<!-- Product Detail Modal -->
+<div class="product-detail-modal" id="productDetailModal" onclick="closeProductDetail(event)">
+  <div class="product-detail-card" onclick="event.stopPropagation()">
+    <div class="product-detail-header">
+      <h3>Product Details</h3>
+      <button class="modal-close-btn" onclick="closeProductDetail()">✕</button>
+    </div>
+    <div class="product-detail-body" id="productDetailBody">
+      <!-- Content will be dynamically inserted -->
+    </div>
+  </div>
+</div>
+
+<script src="../assets/js/script.js"></script>
+<script>
+let allProducts = [];
+
+async function loadProducts() {
+  const grid = document.getElementById('products-grid');
+  try {
+    const { ok, data } = await apiFetch('/products');
+    if (!ok) {
+      grid.innerHTML = '<div class="empty-state"><div class="icon">⚠️</div><h3>Could Not Load Products</h3><p>Please try again later.</p></div>';
+      return;
+    }
+    allProducts = data.products || [];
+    renderProducts(allProducts);
+  } catch {
+    grid.innerHTML = '<div class="empty-state"><div class="icon">🖨️</div><h3>Store Coming Soon</h3><p>Our product catalog is being set up!</p></div>';
+  }
+}
+
+function filterProducts() {
+  const query = document.getElementById('search-input').value.toLowerCase().trim();
+  const sort  = document.getElementById('sort-select').value;
+  let filtered = allProducts.filter(p =>
+    (p.name || '').toLowerCase().includes(query) ||
+    (p.description || '').toLowerCase().includes(query)
+  );
+  if (sort === 'price-asc')       filtered.sort((a, b) => a.price - b.price);
+  else if (sort === 'price-desc') filtered.sort((a, b) => b.price - a.price);
+  else if (sort === 'name')       filtered.sort((a, b) => (a.name || '').localeCompare(b.name || ''));
+  renderProducts(filtered);
+}
+
+function renderProducts(products) {
+  const grid  = document.getElementById('products-grid');
+  const count = document.getElementById('product-count');
+  count.textContent = products.length + ' item' + (products.length !== 1 ? 's' : '');
+
+  if (products.length === 0) {
+    grid.innerHTML = '<div class="empty-state"><div class="icon">🔍</div><h3>No Products Found</h3><p>Try a different search term.</p></div>';
+    return;
+  }
+
+  grid.innerHTML = products.map(function(p) {
+    var imgHtml = p.image
+      ? '<img src="' + p.image + '" alt="' + p.name + '" class="product-card-image" loading="lazy" onerror="this.style.display=\'none\';this.nextElementSibling.style.display=\'flex\'">'
+      : '';
+    return '<div class="product-card" onclick="showProductDetail(' + p.id + ')" style="cursor:pointer">' +
+      imgHtml +
+      '<div class="product-card-image-placeholder" style="' + (p.image ? 'display:none' : '') + '">🖨️</div>' +
+      '<div class="product-card-body">' +
+        '<div class="product-card-name">' + (p.name || 'Product') + '</div>' +
+        '<div class="product-card-desc">' + (p.description || '') + '</div>' +
+        '<div class="product-card-footer">' +
+          '<span class="product-price">' + formatPrice(p.price) + '</span>' +
+          (p.stock <= 0
+            ? '<button class="btn btn-sm" disabled style="background:#e5e7eb;color:#9ca3af;cursor:not-allowed">Out of Stock</button>'
+            : '<button class="btn btn-primary btn-sm" onclick="event.stopPropagation(); addToCart(' + p.id + ', \'' + (p.name || '').replace(/'/g, "\\'") + '\');">Add to Cart</button>') +
+        '</div>' +
+      '</div>' +
+    '</div>';
+  }).join('');
+}
+
+function showProductDetail(productId) {
+  const product = allProducts.find(p => p.id === productId);
+  if (!product) return;
+
+  const modal = document.getElementById('productDetailModal');
+  const body = document.getElementById('productDetailBody');
+
+  const imgHtml = product.image
+    ? '<img src="' + product.image + '" alt="' + product.name + '" class="product-detail-img">'
+    : '<div class="product-detail-img-placeholder">🖨️</div>';
+
+  body.innerHTML = `
+    <div class="product-detail-grid">
+      <div>
+        ${imgHtml}
+      </div>
+      <div class="product-detail-info">
+        <div class="product-detail-name">${product.name || 'Product'}</div>
+        <div class="product-detail-price">${formatPrice(product.price)}</div>
+        <div class="product-detail-desc">${product.description || 'No description available.'}</div>
+        
+        <div class="product-detail-meta">
+          <div class="product-meta-row">
+            <span class="label">🏷️ Product ID</span>
+            <span class="value">#${product.id}</span>
+          </div>
+          <div class="product-meta-row">
+            <span class="label">💰 Price</span>
+            <span class="value" style="color:var(--red)">${formatPrice(product.price)}</span>
+          </div>
+          <div class="product-meta-row">
+            <span class="label">📦 Stock</span>
+            <span class="value" style="color:${product.stock <= 0 ? 'var(--red)' : 'inherit'}">${product.stock <= 0 ? 'Out of Stock' : product.stock}</span>
+          </div>
+        </div>
+
+        <div class="product-detail-actions">
+          ${product.stock <= 0
+            ? '<button class="btn btn-lg" style="flex:1;background:#e5e7eb;color:#9ca3af;cursor:not-allowed" disabled>Out of Stock</button>'
+            : `<button class="btn btn-primary btn-lg" style="flex:1" onclick="addToCart(${product.id}, '${(product.name || '').replace(/'/g, "\\'")}')">Add to Cart</button>`
+          }
+          <button class="btn btn-outline btn-lg" onclick="closeProductDetail()">Close</button>
+        </div>
+      </div>
+    </div>
+    
+    <div style="margin-top:40px;border-top:2px solid var(--gray-mid);padding-top:32px">
+      <h3 style="font-family:var(--font-display);font-size:1.3rem;margin-bottom:24px">⭐ Customer Reviews</h3>
+      <div id="reviewsSection">
+        <div style="text-align:center;padding:20px;color:var(--gray-text)">Loading reviews...</div>
+      </div>
+    </div>
+  `;
+
+  modal.style.display = 'flex';
+  document.body.style.overflow = 'hidden';
+  
+  // Load reviews
+  loadProductReviews(product.id);
+}
+
+function closeProductDetail(event) {
+  if (event && event.target !== event.currentTarget) return;
+  const modal = document.getElementById('productDetailModal');
+  modal.style.display = 'none';
+  document.body.style.overflow = '';
+}
+
+document.addEventListener('keydown', function(e) {
+  if (e.key === 'Escape') closeProductDetail();
+});
+
+async function loadProductReviews(productId) {
+  const section = document.getElementById('reviewsSection');
+  
+  const res = await apiFetch('/products/' + productId + '/reviews/');
+  if (!res.ok) {
+    section.innerHTML = '<div style="text-align:center;padding:20px;color:var(--red)">Failed to load reviews.</div>';
+    return;
+  }
+  
+  const { reviews, average_rating, total_reviews } = res.data;
+  
+  const isLoggedIn = Auth.isLoggedIn();
+  const userReview = reviews.find(r => r.user === Auth.getUser()?.username);
+  
+  let html = '';
+  
+  // Average rating display
+  if (total_reviews > 0) {
+    const stars = '⭐'.repeat(Math.round(average_rating));
+    html += `<div style="background:var(--gray-light);padding:20px;border-radius:var(--radius-lg);margin-bottom:24px;text-align:center">
+      <div style="font-size:2.5rem;margin-bottom:8px">${stars}</div>
+      <div style="font-size:1.5rem;font-weight:700;color:var(--dark)">${average_rating} / 5</div>
+      <div style="font-size:0.9rem;color:var(--gray-text);margin-top:4px">${total_reviews} review${total_reviews !== 1 ? 's' : ''}</div>
+    </div>`;
+  }
+  
+  // Add review form (only if logged in and hasn't reviewed yet)
+  if (isLoggedIn) {
+    html += `<div style="background:var(--off-white);padding:24px;border-radius:var(--radius-lg);margin-bottom:24px;border:1px solid var(--gray-mid)">
+      <h4 style="font-size:1rem;margin-bottom:16px;font-weight:700">${userReview ? 'Update Your Review' : 'Write a Review'}</h4>
+      <div style="margin-bottom:12px">
+        <label style="display:block;font-size:0.85rem;font-weight:600;margin-bottom:8px">Rating</label>
+        <div id="ratingStars" style="font-size:2rem;cursor:pointer">
+          <span data-rating="1">☆</span>
+          <span data-rating="2">☆</span>
+          <span data-rating="3">☆</span>
+          <span data-rating="4">☆</span>
+          <span data-rating="5">☆</span>
+        </div>
+      </div>
+      <div style="margin-bottom:12px">
+        <label style="display:block;font-size:0.85rem;font-weight:600;margin-bottom:8px">Comment</label>
+        <textarea id="reviewComment" class="form-control" rows="3" placeholder="Share your experience with this product...">${userReview ? userReview.comment : ''}</textarea>
+      </div>
+      <button class="btn btn-primary" onclick="submitReview(${productId})">Submit Review</button>
+    </div>`;
+  } else {
+    html += `<div style="background:var(--gray-light);padding:16px;border-radius:var(--radius);margin-bottom:24px;text-align:center;color:var(--gray-text)">
+      <a href="login.html" style="color:var(--red);font-weight:600">Login</a> to write a review
+    </div>`;
+  }
+  
+  // Reviews list
+  if (reviews.length > 0) {
+    html += '<div style="display:flex;flex-direction:column;gap:16px">';
+    reviews.forEach(review => {
+      const stars = '⭐'.repeat(review.rating) + '☆'.repeat(5 - review.rating);
+      const date = new Date(review.created_at).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
+      html += `<div style="background:white;padding:20px;border-radius:var(--radius-lg);border:1px solid var(--gray-mid)">
+        <div style="display:flex;justify-content:space-between;align-items:start;margin-bottom:12px">
+          <div>
+            <div style="font-weight:700;margin-bottom:4px">${review.user}</div>
+            <div style="font-size:1.2rem;margin-bottom:4px">${stars}</div>
+            <div style="font-size:0.75rem;color:var(--gray-text)">${date}</div>
+          </div>
+          ${review.can_delete ? `<button class="btn btn-sm" style="background:#fee2e2;color:#dc2626;padding:6px 12px" onclick="deleteReview(${review.id}, ${productId})">Delete</button>` : ''}
+        </div>
+        <div style="color:var(--gray-text);line-height:1.6">${review.comment}</div>
+      </div>`;
+    });
+    html += '</div>';
+  } else {
+    html += '<div style="text-align:center;padding:40px;color:var(--gray-text)">No reviews yet. Be the first to review!</div>';
+  }
+  
+  section.innerHTML = html;
+  
+  // Add star rating interaction
+  if (isLoggedIn) {
+    const stars = document.querySelectorAll('#ratingStars span');
+    let selectedRating = userReview ? userReview.rating : 0;
+    
+    // Set initial rating if editing
+    if (selectedRating > 0) {
+      stars.forEach((star, index) => {
+        star.textContent = index < selectedRating ? '⭐' : '☆';
+      });
+    }
+    
+    stars.forEach(star => {
+      star.addEventListener('click', function() {
+        selectedRating = parseInt(this.dataset.rating);
+        stars.forEach((s, index) => {
+          s.textContent = index < selectedRating ? '⭐' : '☆';
+        });
+      });
+      
+      star.addEventListener('mouseenter', function() {
+        const rating = parseInt(this.dataset.rating);
+        stars.forEach((s, index) => {
+          s.textContent = index < rating ? '⭐' : '☆';
+        });
+      });
+    });
+    
+    document.getElementById('ratingStars').addEventListener('mouseleave', function() {
+      stars.forEach((s, index) => {
+        s.textContent = index < selectedRating ? '⭐' : '☆';
+      });
+    });
+  }
+}
+
+async function submitReview(productId) {
+  const stars = document.querySelectorAll('#ratingStars span');
+  let rating = 0;
+  stars.forEach((star, index) => {
+    if (star.textContent === '⭐') rating = index + 1;
+  });
+  
+  const comment = document.getElementById('reviewComment').value.trim();
+  
+  if (rating === 0) {
+    Toast.error('Please select a rating.');
+    return;
+  }
+  
+  if (!comment) {
+    Toast.error('Please write a comment.');
+    return;
+  }
+  
+  const res = await apiFetch('/products/' + productId + '/reviews/add/', {
+    method: 'POST',
+    body: JSON.stringify({ rating, comment }),
+  });
+  
+  if (res.ok) {
+    Toast.success(res.data.message);
+    loadProductReviews(productId);
+  } else {
+    Toast.error(res.data?.error || 'Failed to submit review.');
+  }
+}
+
+async function deleteReview(reviewId, productId) {
+  if (!confirm('Are you sure you want to delete this review?')) return;
+  
+  const res = await apiFetch('/reviews/' + reviewId + '/delete/', {
+    method: 'DELETE',
+  });
+  
+  if (res.ok) {
+    Toast.success('Review deleted.');
+    loadProductReviews(productId);
+  } else {
+    Toast.error(res.data?.error || 'Failed to delete review.');
+  }
+}
+
+document.addEventListener('DOMContentLoaded', loadProducts);
+</script>
+</body>
+</html>

@@ -1,0 +1,524 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="icon" href="../favicon.ico" type="image/x-icon">
+  <title>My Profile – Print X</title>
+  <link rel="stylesheet" href="../assets/css/style.css">
+  <style>
+    .profile-layout {
+      display: grid;
+      grid-template-columns: 280px 1fr;
+      gap: 28px;
+      align-items: start;
+    }
+
+    .profile-sidebar {
+      background: var(--white);
+      border-radius: var(--radius-lg);
+      padding: 24px;
+      box-shadow: var(--shadow);
+      border: 1px solid var(--gray-mid);
+      position: sticky;
+      top: calc(var(--nav-height) + 20px);
+    }
+
+    .profile-avatar {
+      width: 100px;
+      height: 100px;
+      border-radius: 50%;
+      background: var(--red-subtle);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 2.5rem;
+      margin: 0 auto 16px;
+      border: 3px solid var(--red);
+      position: relative;
+      overflow: hidden;
+      cursor: pointer;
+      transition: all var(--transition);
+    }
+
+    .profile-avatar:hover {
+      transform: scale(1.05);
+      box-shadow: 0 0 20px rgba(232,0,13,0.3);
+    }
+
+    .profile-avatar img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .avatar-upload-overlay {
+      position: absolute;
+      inset: 0;
+      background: rgba(0,0,0,0.6);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      opacity: 0;
+      transition: opacity var(--transition);
+      color: white;
+      font-size: 0.8rem;
+      text-align: center;
+      padding: 10px;
+    }
+
+    .profile-avatar:hover .avatar-upload-overlay {
+      opacity: 1;
+    }
+
+    .avatar-input {
+      display: none;
+    }
+
+    .profile-name {
+      text-align: center;
+      font-family: var(--font-display);
+      font-size: 1.1rem;
+      font-weight: 700;
+      margin-bottom: 4px;
+    }
+
+    .profile-email {
+      text-align: center;
+      font-size: 0.85rem;
+      color: var(--gray-text);
+      margin-bottom: 20px;
+    }
+
+    .profile-nav {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+    }
+
+    .profile-nav li {
+      margin-bottom: 8px;
+    }
+
+    .profile-nav a {
+      display: block;
+      padding: 10px 14px;
+      border-radius: var(--radius);
+      color: var(--dark);
+      text-decoration: none;
+      transition: all var(--transition);
+      font-size: 0.9rem;
+    }
+
+    .profile-nav a:hover {
+      background: var(--gray-light);
+    }
+
+    .profile-nav a.active {
+      background: var(--red-subtle);
+      color: var(--red);
+      font-weight: 600;
+    }
+
+    .profile-content {
+      background: var(--white);
+      border-radius: var(--radius-lg);
+      padding: 32px;
+      box-shadow: var(--shadow);
+      border: 1px solid var(--gray-mid);
+    }
+
+    .profile-section {
+      display: none;
+    }
+
+    .profile-section.active {
+      display: block;
+    }
+
+    .section-header {
+      margin-bottom: 28px;
+      padding-bottom: 16px;
+      border-bottom: 2px solid var(--gray-mid);
+    }
+
+    .section-header h2 {
+      font-family: var(--font-display);
+      font-size: 1.3rem;
+      margin-bottom: 6px;
+    }
+
+    .section-header p {
+      color: var(--gray-text);
+      font-size: 0.9rem;
+    }
+
+    .form-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+    }
+
+    .success-message {
+      background: #d1fae5;
+      color: #065f46;
+      padding: 12px 16px;
+      border-radius: var(--radius);
+      margin-bottom: 20px;
+      border-left: 3px solid #22c55e;
+      display: none;
+    }
+
+    .success-message.show {
+      display: block;
+    }
+
+    @media (max-width: 900px) {
+      .profile-layout {
+        grid-template-columns: 1fr;
+      }
+
+      .profile-sidebar {
+        position: static;
+      }
+
+      .form-row {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header class="navbar" id="navbar"></header>
+
+  <div class="page-header">
+    <div class="container">
+      <span class="section-label">ACCOUNT</span>
+      <h1>My <span style="color:var(--red)">Profile</span></h1>
+      <p>Manage your account settings and preferences</p>
+    </div>
+  </div>
+
+  <section class="section">
+    <div class="container">
+      <div class="profile-layout">
+        <!-- Sidebar -->
+        <div class="profile-sidebar">
+          <div class="profile-avatar" id="profileAvatar" onclick="document.getElementById('avatarInput').click()" title="Click to change profile picture">
+            <span id="avatarPlaceholder">👤</span>
+            <img id="avatarImage" style="display:none;" alt="Profile">
+            <div class="avatar-upload-overlay">📷 Change Photo</div>
+          </div>
+          <input type="file" id="avatarInput" class="avatar-input" accept="image/*" onchange="handleAvatarChange(event)">
+          <div class="profile-name" id="profileName">Loading...</div>
+          <div class="profile-email" id="profileEmail"></div>
+          
+          <ul class="profile-nav">
+            <li><a href="#" class="active" onclick="showSection('info'); return false;">Personal Info</a></li>
+            <li><a href="#" onclick="showSection('password'); return false;">Change Password</a></li>
+            <li><a href="orders.html">My Orders</a></li>
+            <li><a href="cart.html">My Cart</a></li>
+          </ul>
+        </div>
+
+        <!-- Content -->
+        <div class="profile-content">
+          <!-- Personal Info Section -->
+          <div class="profile-section active" id="section-info">
+            <div class="section-header">
+              <h2>Personal Information</h2>
+              <p>Update your personal details and contact information</p>
+            </div>
+
+            <div class="success-message" id="infoSuccess"></div>
+
+            <form id="profileForm" onsubmit="updateProfile(event)">
+              <div class="form-row">
+                <div class="form-group">
+                  <label>First Name</label>
+                  <input type="text" class="form-control" id="firstName" placeholder="Juan">
+                </div>
+                <div class="form-group">
+                  <label>Last Name</label>
+                  <input type="text" class="form-control" id="lastName" placeholder="Dela Cruz">
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label>Email Address</label>
+                <input type="email" class="form-control" id="email" placeholder="juan@email.com">
+              </div>
+
+              <div class="form-group">
+                <label>Phone Number</label>
+                <input type="tel" class="form-control" id="phone" placeholder="+63 912 345 6789">
+              </div>
+
+              <div class="form-group">
+                <label>Address</label>
+                <textarea class="form-control" id="address" rows="3" placeholder="House/Unit No., Street, Barangay, City/Municipality, Province, ZIP Code"></textarea>
+              </div>
+
+              <button type="submit" class="btn btn-primary" id="saveBtn">Save Changes</button>
+            </form>
+          </div>
+
+          <!-- Change Password Section -->
+          <div class="profile-section" id="section-password">
+            <div class="section-header">
+              <h2>Change Password</h2>
+              <p>Update your password to keep your account secure</p>
+            </div>
+
+            <div class="success-message" id="passwordSuccess"></div>
+
+            <form id="passwordForm" onsubmit="changePassword(event)">
+              <div class="form-group">
+                <label>Current Password</label>
+                <input type="password" class="form-control" id="currentPassword" placeholder="Enter current password">
+              </div>
+
+              <div class="form-group">
+                <label>New Password</label>
+                <input type="password" class="form-control" id="newPassword" placeholder="Enter new password (min. 8 characters)">
+              </div>
+
+              <div class="form-group">
+                <label>Confirm New Password</label>
+                <input type="password" class="form-control" id="confirmPassword" placeholder="Confirm new password">
+              </div>
+
+              <button type="submit" class="btn btn-primary" id="passwordBtn">Change Password</button>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <footer class="footer" id="footer"></footer>
+  <div class="toast-container"></div>
+
+  <script src="../assets/js/script.js"></script>
+  <script>
+    if (!Auth.isLoggedIn()) {
+      window.location.href = 'login.html';
+    }
+
+    let profileData = null;
+
+    async function loadProfile() {
+      const res = await apiFetch('/profile/');
+      if (res.ok && res.data.profile) {
+        profileData = res.data.profile;
+        displayProfile(profileData);
+        // Save to localStorage for navbar
+        localStorage.setItem('px_profile', JSON.stringify(profileData));
+      } else {
+        Toast.error('Failed to load profile.');
+      }
+    }
+
+    function displayProfile(profile) {
+      // Sidebar
+      document.getElementById('profileName').textContent = 
+        `${profile.first_name || ''} ${profile.last_name || ''}`.trim() || profile.username;
+      document.getElementById('profileEmail').textContent = profile.email;
+
+      // Profile picture
+      const avatarImage = document.getElementById('avatarImage');
+      const avatarPlaceholder = document.getElementById('avatarPlaceholder');
+      
+      if (profile.profile_picture) {
+        avatarImage.src = profile.profile_picture;
+        avatarImage.style.display = 'block';
+        avatarPlaceholder.style.display = 'none';
+      } else {
+        avatarImage.style.display = 'none';
+        avatarPlaceholder.style.display = 'block';
+      }
+
+      // Form fields
+      document.getElementById('firstName').value = profile.first_name || '';
+      document.getElementById('lastName').value = profile.last_name || '';
+      document.getElementById('email').value = profile.email || '';
+      document.getElementById('phone').value = profile.phone || '';
+      document.getElementById('address').value = profile.address || '';
+    }
+
+    async function handleAvatarChange(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+
+      // Validate file type
+      if (!file.type.startsWith('image/')) {
+        Toast.error('Please select an image file.');
+        return;
+      }
+
+      // Validate file size (max 5MB)
+      if (file.size > 5 * 1024 * 1024) {
+        Toast.error('Image size must be less than 5MB.');
+        return;
+      }
+
+      // Show loading state
+      const avatarPlaceholder = document.getElementById('avatarPlaceholder');
+      avatarPlaceholder.textContent = '⏳';
+
+      // Convert to base64
+      const reader = new FileReader();
+      reader.onload = async function(e) {
+        const base64Image = e.target.result;
+        
+        // Update profile with new image
+        const res = await apiFetch('/profile/', {
+          method: 'PATCH',
+          body: JSON.stringify({ profile_picture: base64Image }),
+        });
+
+        if (res.ok) {
+          Toast.success('Profile picture updated!');
+          // Update display
+          const avatarImage = document.getElementById('avatarImage');
+          avatarImage.src = base64Image;
+          avatarImage.style.display = 'block';
+          avatarPlaceholder.style.display = 'none';
+          
+          // Update localStorage for navbar
+          const currentProfile = JSON.parse(localStorage.getItem('px_profile') || '{}');
+          currentProfile.profile_picture = base64Image;
+          localStorage.setItem('px_profile', JSON.stringify(currentProfile));
+          
+          // Refresh navbar to show new picture
+          if (typeof renderNavbar === 'function') {
+            renderNavbar(getActivePage());
+          }
+        } else {
+          Toast.error('Failed to update profile picture.');
+          avatarPlaceholder.textContent = '👤';
+        }
+      };
+
+      reader.onerror = function() {
+        Toast.error('Failed to read image file.');
+        avatarPlaceholder.textContent = '👤';
+      };
+
+      reader.readAsDataURL(file);
+    }
+
+    async function updateProfile(event) {
+      event.preventDefault();
+      
+      const btn = document.getElementById('saveBtn');
+      const successMsg = document.getElementById('infoSuccess');
+      successMsg.classList.remove('show');
+
+      btn.disabled = true;
+      btn.textContent = 'Saving...';
+
+      const data = {
+        first_name: document.getElementById('firstName').value.trim(),
+        last_name: document.getElementById('lastName').value.trim(),
+        email: document.getElementById('email').value.trim(),
+        phone: document.getElementById('phone').value.trim(),
+        address: document.getElementById('address').value.trim(),
+      };
+
+      const res = await apiFetch('/profile/', {
+        method: 'PATCH',
+        body: JSON.stringify(data),
+      });
+
+      if (res.ok) {
+        successMsg.textContent = 'Profile updated successfully!';
+        successMsg.classList.add('show');
+        Toast.success('Profile updated!');
+        
+        // Update local user data
+        const user = Auth.getUser();
+        user.first_name = data.first_name;
+        user.last_name = data.last_name;
+        user.email = data.email;
+        localStorage.setItem('px_user', JSON.stringify(user));
+        
+        // Reload profile
+        await loadProfile();
+      } else {
+        Toast.error(res.data.error || 'Failed to update profile.');
+      }
+
+      btn.disabled = false;
+      btn.textContent = 'Save Changes';
+    }
+
+    async function changePassword(event) {
+      event.preventDefault();
+
+      const currentPassword = document.getElementById('currentPassword').value;
+      const newPassword = document.getElementById('newPassword').value;
+      const confirmPassword = document.getElementById('confirmPassword').value;
+      const btn = document.getElementById('passwordBtn');
+      const successMsg = document.getElementById('passwordSuccess');
+      
+      successMsg.classList.remove('show');
+
+      if (!currentPassword || !newPassword || !confirmPassword) {
+        Toast.error('All password fields are required.');
+        return;
+      }
+
+      if (newPassword.length < 8) {
+        Toast.error('New password must be at least 8 characters.');
+        return;
+      }
+
+      if (newPassword !== confirmPassword) {
+        Toast.error('New passwords do not match.');
+        return;
+      }
+
+      btn.disabled = true;
+      btn.textContent = 'Changing...';
+
+      const res = await apiFetch('/profile/change-password/', {
+        method: 'POST',
+        body: JSON.stringify({
+          current_password: currentPassword,
+          new_password: newPassword,
+        }),
+      });
+
+      if (res.ok) {
+        successMsg.textContent = 'Password changed successfully!';
+        successMsg.classList.add('show');
+        Toast.success('Password changed!');
+        
+        // Clear form
+        document.getElementById('passwordForm').reset();
+      } else {
+        Toast.error(res.data.error || 'Failed to change password.');
+      }
+
+      btn.disabled = false;
+      btn.textContent = 'Change Password';
+    }
+
+    function showSection(section) {
+      // Hide all sections
+      document.querySelectorAll('.profile-section').forEach(s => s.classList.remove('active'));
+      document.querySelectorAll('.profile-nav a').forEach(a => a.classList.remove('active'));
+
+      // Show selected section
+      document.getElementById(`section-${section}`).classList.add('active');
+      event.target.classList.add('active');
+
+      // Hide success messages
+      document.querySelectorAll('.success-message').forEach(m => m.classList.remove('show'));
+    }
+
+    loadProfile();
+  </script>
+</body>
+</html>

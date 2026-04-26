@@ -1,0 +1,419 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="icon" href="../favicon.ico" type="image/x-icon">
+  <title>Cart – Print X</title>
+  <link rel="stylesheet" href="../assets/css/style.css">
+  <style>
+    .cart-layout {
+      display: grid;
+      grid-template-columns: 1fr 340px;
+      gap: 28px;
+      align-items: start;
+    }
+
+    .cart-item {
+      display: flex;
+      gap: 18px;
+      padding: 18px 0;
+      border-bottom: 1px solid var(--gray-mid);
+      align-items: center;
+    }
+
+    .cart-item:last-child { border-bottom: none; }
+
+    .cart-item-checkbox {
+      width: 20px;
+      height: 20px;
+      cursor: pointer;
+      accent-color: var(--red);
+      flex-shrink: 0;
+    }
+
+    .select-all-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 12px 0;
+      border-bottom: 2px solid var(--gray-mid);
+      margin-bottom: 8px;
+      font-size: 0.88rem;
+      font-weight: 600;
+    }
+
+    .cart-item-img {
+      width: 84px;
+      height: 84px;
+      object-fit: cover;
+      border-radius: var(--radius);
+      background: var(--gray-light);
+      flex-shrink: 0;
+    }
+
+    .cart-item-placeholder {
+      width: 84px;
+      height: 84px;
+      background: var(--gray-light);
+      border-radius: var(--radius);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.6rem;
+      flex-shrink: 0;
+    }
+
+    .cart-item-info { flex: 1; min-width: 0; }
+
+    .cart-item-name {
+      font-family: var(--font-display);
+      font-size: 0.88rem;
+      font-weight: 700;
+      margin-bottom: 5px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .cart-item-price {
+      color: var(--red);
+      font-family: var(--font-display);
+      font-size: 0.95rem;
+      font-weight: 700;
+      margin-bottom: 10px;
+    }
+
+    .qty-controls {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 6px;
+    }
+
+    .qty-btn {
+      width: 30px;
+      height: 30px;
+      border-radius: 6px;
+      background: var(--gray-light);
+      border: 1px solid var(--gray-mid);
+      font-size: 1rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: all var(--transition);
+      font-weight: 700;
+      line-height: 1;
+    }
+
+    .qty-btn:hover { background: var(--red); color: white; border-color: var(--red); }
+
+    .qty-display {
+      min-width: 32px;
+      text-align: center;
+      font-weight: 700;
+      font-size: 0.9rem;
+    }
+
+    .cart-item-remove {
+      background: none;
+      border: none;
+      color: var(--gray-text);
+      cursor: pointer;
+      padding: 8px;
+      border-radius: var(--radius);
+      transition: all var(--transition);
+      font-size: 1.1rem;
+      flex-shrink: 0;
+    }
+
+    .cart-item-remove:hover { background: #fee2e2; color: var(--red); }
+
+    .cart-subtotal {
+      font-family: var(--font-mono);
+      font-size: 0.78rem;
+      color: var(--gray-text);
+    }
+
+    .summary-card {
+      background: var(--white);
+      border: 1px solid var(--gray-mid);
+      border-radius: var(--radius-lg);
+      padding: 26px;
+      box-shadow: var(--shadow);
+      position: sticky;
+      top: calc(var(--nav-height) + 20px);
+    }
+
+    .summary-card h3 {
+      font-family: var(--font-display);
+      font-size: 0.95rem;
+      margin-bottom: 18px;
+      padding-bottom: 14px;
+      border-bottom: 1px solid var(--gray-mid);
+    }
+
+    .summary-row {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 10px;
+      font-size: 0.87rem;
+    }
+
+    .summary-row.total {
+      border-top: 2px solid var(--dark);
+      padding-top: 14px;
+      margin-top: 14px;
+      font-weight: 700;
+      font-size: 1.05rem;
+      font-family: var(--font-display);
+    }
+
+    .summary-row.total span:last-child { color: var(--red); }
+
+    @media (max-width: 820px) {
+      .cart-layout { grid-template-columns: 1fr; }
+      .summary-card { position: static; }
+    }
+
+    @media (max-width: 480px) {
+      .cart-item { gap: 12px; }
+      .cart-item-img, .cart-item-placeholder { width: 70px; height: 70px; }
+    }
+  </style>
+</head>
+<body>
+  <header class="navbar" id="navbar"></header>
+
+  <div class="page-header">
+    <div class="container">
+      <h1>🛒 Your Cart</h1>
+      <p>Review your items before checkout</p>
+    </div>
+  </div>
+
+  <section class="section">
+    <div class="container">
+      <div id="cartContent">
+        <div class="loading-wrap">
+          <div class="spinner"></div>
+          <span>Loading cart…</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <footer class="footer" id="footer"></footer>
+  <div class="toast-container"></div>
+
+  <script src="../assets/js/script.js"></script>
+  <script>
+    let cartData = [];
+    let customRequestsData = [];
+    let selectedItems = new Set();
+    let selectedCustomItems = new Set();
+
+    async function loadCart() {
+      const content = document.getElementById('cartContent');
+
+      if (!Auth.isLoggedIn()) {
+        content.innerHTML = '<div class="empty-state"><div class="icon">🔐</div><h3>Login Required</h3><p>Please login to view your cart.</p><a href="login.html" class="btn btn-primary mt-16">Login Now</a></div>';
+        return;
+      }
+
+      const { ok, data } = await apiFetch('/cart/');
+      if (!ok) {
+        content.innerHTML = '<div class="empty-state"><div class="icon">⚠️</div><h3>Failed to Load Cart</h3><p>Please try again later.</p></div>';
+        return;
+      }
+
+      // Backend returns { items: [...] } with flat fields: id, name, price, quantity, subtotal, image
+      cartData = data.items || data.cart || [];
+      customRequestsData = data.custom_requests || [];
+      
+      // Select all items by default
+      selectedItems = new Set(cartData.map(item => item.id));
+      selectedCustomItems = new Set(customRequestsData.map(req => req.id));
+      
+      const total = cartData.reduce((sum, item) => sum + parseFloat(item.subtotal || 0), 0);
+      const totalItems = cartData.length + customRequestsData.length;
+
+      if (totalItems === 0) {
+        content.innerHTML = '<div class="empty-state"><div class="icon">🛒</div><h3>Your Cart is Empty</h3><p>Browse our products or submit a custom request!</p><a href="product.html" class="btn btn-primary mt-16">Browse Products</a></div>';
+        return;
+      }
+
+      content.innerHTML = `
+        <div class="cart-layout">
+          <div class="card">
+            <h3 style="font-family:var(--font-display);font-size:0.95rem;margin-bottom:4px">Cart Items <span style="color:var(--gray-text);font-weight:400">(${totalItems})</span></h3>
+            <div class="select-all-row">
+              <input type="checkbox" id="selectAllCheckbox" class="cart-item-checkbox" onchange="toggleSelectAll()" checked>
+              <label for="selectAllCheckbox" style="cursor:pointer;user-select:none;">Select All</label>
+            </div>
+            <div id="cartItems"></div>
+          </div>
+          <div class="summary-card">
+            <h3>Order Summary</h3>
+            <div id="summaryRows"></div>
+            <div class="summary-row total"><span>Total</span><span id="grandTotal">${formatPrice(total)}</span></div>
+            <button class="btn btn-primary btn-full mt-24" style="font-size:0.95rem;padding:14px" onclick="goCheckout()">Proceed to Checkout →</button>
+            <a href="product.html" class="btn btn-outline btn-full mt-12" style="text-align:center">← Continue Shopping</a>
+          </div>
+        </div>`;
+
+      renderCartItems();
+      updateSummary();
+    }
+
+    function toggleSelectAll() {
+      const checkbox = document.getElementById('selectAllCheckbox');
+      if (checkbox.checked) {
+        selectedItems = new Set(cartData.map(item => item.id));
+        selectedCustomItems = new Set(customRequestsData.map(req => req.id));
+      } else {
+        selectedItems.clear();
+        selectedCustomItems.clear();
+      }
+      renderCartItems();
+      updateSummary();
+    }
+
+    function toggleItemSelection(itemId) {
+      if (selectedItems.has(itemId)) {
+        selectedItems.delete(itemId);
+      } else {
+        selectedItems.add(itemId);
+      }
+      updateSelectAllCheckbox();
+      updateSummary();
+    }
+
+    function toggleCustomItemSelection(reqId) {
+      if (selectedCustomItems.has(reqId)) {
+        selectedCustomItems.delete(reqId);
+      } else {
+        selectedCustomItems.add(reqId);
+      }
+      updateSelectAllCheckbox();
+      updateSummary();
+    }
+
+    function updateSelectAllCheckbox() {
+      const checkbox = document.getElementById('selectAllCheckbox');
+      const totalItems = cartData.length + customRequestsData.length;
+      const selectedCount = selectedItems.size + selectedCustomItems.size;
+      checkbox.checked = selectedCount === totalItems && totalItems > 0;
+    }
+
+    function renderCartItems() {
+      const container = document.getElementById('cartItems');
+      
+      const regularItemsHtml = cartData.map(function(item) {
+        var hasImg = !!item.image;
+        var isChecked = selectedItems.has(item.id);
+        return `
+          <div class="cart-item" id="cartItem-${item.id}">
+            <input type="checkbox" class="cart-item-checkbox" ${isChecked ? 'checked' : ''} onchange="toggleItemSelection(${item.id})">
+            ${hasImg ? `<img src="${item.image}" alt="${item.name}" class="cart-item-img" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">` : ''}
+            <div class="cart-item-placeholder" style="${hasImg ? 'display:none' : ''}">🖨️</div>
+            <div class="cart-item-info">
+              <div class="cart-item-name">${item.name || 'Product'}</div>
+              <div class="cart-item-price">${formatPrice(item.price || 0)} each</div>
+              <div class="qty-controls">
+                <button class="qty-btn" onclick="changeQty(${item.id}, ${item.quantity - 1})">−</button>
+                <span class="qty-display" id="qty-${item.id}">${item.quantity}</span>
+                <button class="qty-btn" onclick="changeQty(${item.id}, ${item.quantity + 1})">+</button>
+              </div>
+              <div class="cart-subtotal">Subtotal: ${formatPrice(item.subtotal || 0)}</div>
+            </div>
+            <button class="cart-item-remove" onclick="removeItem(${item.id})" title="Remove item">🗑️</button>
+          </div>`;
+      }).join('');
+
+      const customItemsHtml = customRequestsData.map(function(req) {
+        var isChecked = selectedCustomItems.has(req.id);
+        return `
+          <div class="cart-item" id="customReqItem-${req.id}">
+            <input type="checkbox" class="cart-item-checkbox" ${isChecked ? 'checked' : ''} onchange="toggleCustomItemSelection(${req.id})">
+            <div class="cart-item-placeholder">⬡</div>
+            <div class="cart-item-info">
+              <div class="cart-item-name" title="${req.file_name}">Custom: ${req.file_name}</div>
+              <div class="cart-item-price">${formatPrice(req.estimated_price || 0)} each</div>
+              <div class="qty-controls">
+                <span class="qty-display">${req.quantity}</span>
+              </div>
+              <div class="cart-subtotal">Subtotal: ${formatPrice((req.estimated_price || 0) * req.quantity)}</div>
+            </div>
+            <button class="cart-item-remove" onclick="removeCustomItem(${req.id})" title="Remove item">🗑️</button>
+          </div>`;
+      }).join('');
+
+      container.innerHTML = regularItemsHtml + customItemsHtml;
+    }
+
+    function updateSummary() {
+      const selectedCartItems = cartData.filter(item => selectedItems.has(item.id));
+      const selectedCustomReqs = customRequestsData.filter(req => selectedCustomItems.has(req.id));
+      
+      const regularItemsSummary = selectedCartItems.map(function(item) {
+        return `<div class="summary-row"><span>${item.name || 'Item'} ×${item.quantity}</span><span>${formatPrice(item.subtotal || 0)}</span></div>`;
+      }).join('');
+
+      const customItemsSummary = selectedCustomReqs.map(function(req) {
+        const subtotal = (req.estimated_price || 0) * req.quantity;
+        return `<div class="summary-row"><span>Custom: ${req.file_name} ×${req.quantity}</span><span>${formatPrice(subtotal)}</span></div>`;
+      }).join('');
+
+      const total = selectedCartItems.reduce((sum, item) => sum + parseFloat(item.subtotal || 0), 0) +
+                    selectedCustomReqs.reduce((sum, req) => sum + ((req.estimated_price || 0) * req.quantity), 0);
+
+      document.getElementById('summaryRows').innerHTML = regularItemsSummary + customItemsSummary;
+      document.getElementById('grandTotal').textContent = formatPrice(total);
+    }
+
+    async function removeCustomItem(reqId) {
+      const res = await apiFetch('/cart/remove-custom/' + reqId + '/', { method: 'DELETE' });
+      if (res.ok) { Toast.info('Custom item removed.'); loadCart(); updateCartCount(); }
+      else Toast.error('Failed to remove custom item.');
+    }
+
+    async function changeQty(itemId, newQty) {
+      if (newQty <= 0) { removeItem(itemId); return; }
+      const res = await apiFetch('/cart/update/' + itemId + '/', {
+        method: 'PUT',
+        body: JSON.stringify({ quantity: newQty }),
+      });
+      if (res.ok) { loadCart(); updateCartCount(); }
+      else Toast.error(res.data?.error || 'Update failed.');
+    }
+
+    async function removeItem(itemId) {
+      const res = await apiFetch('/cart/remove/' + itemId + '/', { method: 'DELETE' });
+      if (res.ok) { 
+        selectedItems.delete(itemId);
+        Toast.info('Item removed.'); 
+        loadCart(); 
+        updateCartCount(); 
+      }
+      else Toast.error('Failed to remove item.');
+    }
+
+    function goCheckout() {
+      if (selectedItems.size === 0 && selectedCustomItems.size === 0) {
+        Toast.error('Please select at least one item to checkout.');
+        return;
+      }
+      
+      // Store selected items in sessionStorage
+      sessionStorage.setItem('selectedCartItems', JSON.stringify(Array.from(selectedItems)));
+      sessionStorage.setItem('selectedCustomItems', JSON.stringify(Array.from(selectedCustomItems)));
+      
+      window.location.href = 'checkout.html';
+    }
+
+    loadCart();
+  </script>
+</body>
+</html>

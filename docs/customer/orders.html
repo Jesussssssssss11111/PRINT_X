@@ -1,0 +1,413 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="icon" href="../favicon.ico" type="image/x-icon">
+  <title>My Orders – Print X</title>
+  <link rel="stylesheet" href="../assets/css/style.css">
+  <style>
+    .orders-wrap {
+      max-width: 1000px;
+      margin: 0 auto;
+      background: var(--white);
+      border-radius: var(--radius-lg);
+      box-shadow: var(--shadow);
+      border: 1px solid var(--gray-mid);
+      overflow: hidden;
+    }
+
+    .orders-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 22px 28px;
+      border-bottom: 1px solid var(--gray-mid);
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+
+    .orders-header h3 {
+      font-family: var(--font-display);
+      font-size: 1rem;
+    }
+
+    /* Mobile order cards */
+    .order-card {
+      display: none;
+      padding: 18px 20px;
+      border-bottom: 1px solid var(--gray-mid);
+      cursor: pointer;
+      transition: background var(--transition);
+    }
+
+    .order-card:hover { background: var(--gray-light); }
+    .order-card:last-child { border-bottom: none; }
+
+    .order-card-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 8px;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .order-id {
+      font-family: var(--font-mono);
+      font-weight: 700;
+      font-size: 0.88rem;
+    }
+
+    .order-date {
+      font-size: 0.78rem;
+      color: var(--gray-text);
+    }
+
+    .order-total {
+      font-family: var(--font-display);
+      color: var(--red);
+      font-weight: 700;
+    }
+
+    .order-items-preview {
+      font-size: 0.8rem;
+      color: var(--gray-text);
+      margin-top: 4px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .btn-danger {
+      background: #fee2e2;
+      color: #991b1b;
+      border: 1px solid #fecaca;
+    }
+
+    .btn-danger:hover {
+      background: #fecaca;
+      transform: none;
+    }
+
+    /* Detail modal styles */
+    .detail-row {
+      display: flex;
+      justify-content: space-between;
+      padding: 10px 0;
+      border-bottom: 1px solid var(--gray-mid);
+      font-size: 0.88rem;
+    }
+
+    .detail-row:last-child { border-bottom: none; }
+
+    @media (max-width: 640px) {
+      .table-wrap table { display: none; }
+      .order-card { display: block; }
+    }
+  </style>
+</head>
+<body>
+
+<header class="navbar" id="navbar"></header>
+<div class="toast-container"></div>
+
+<div class="page-wrapper">
+  <div class="page-header">
+    <div class="container">
+      <span class="section-label">ACCOUNT</span>
+      <h1>My <span style="color:var(--red)">Orders</span></h1>
+      <p>Track your 3D print orders and custom requests</p>
+    </div>
+  </div>
+
+  <section class="section">
+    <div class="container">
+      <div class="orders-wrap">
+        <div class="orders-header">
+          <h3>Order History</h3>
+          <span id="ordersCount" class="font-mono text-gray text-sm"></span>
+        </div>
+
+        <!-- Desktop Table -->
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>Tracking ID</th>
+                <th>Date</th>
+                <th>Items</th>
+                <th>Total</th>
+                <th>Status</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+            <tbody id="ordersTable">
+              <tr>
+                <td colspan="7" style="padding:60px;text-align:center;">
+                  <div class="spinner" style="margin:0 auto 16px"></div>
+                  Loading orders…
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Mobile Cards -->
+        <div id="orderCards"></div>
+      </div>
+    </div>
+  </section>
+</div>
+
+<!-- Order Detail Modal -->
+<div class="modal-overlay hidden" id="orderModal">
+  <div class="modal" style="max-width:560px">
+    <div class="modal-title">
+      Order Details
+      <button class="modal-close" onclick="document.getElementById('orderModal').classList.add('hidden')">✕</button>
+    </div>
+    <div id="orderModalContent">Loading…</div>
+  </div>
+</div>
+
+<!-- Cancel Order Modal -->
+<div class="modal-overlay hidden" id="cancelOrderModal">
+  <div class="modal" style="max-width:500px">
+    <div class="modal-title">
+      Cancel Order
+      <button class="modal-close" onclick="closeCancelModal()">✕</button>
+    </div>
+    <div style="padding:0 4px">
+      <p style="color:var(--gray-text);font-size:0.9rem;margin-bottom:20px;line-height:1.6">
+        Please provide a reason for cancelling this order. Your request will be reviewed by our admin team.
+      </p>
+      <input type="hidden" id="cancelOrderId">
+      <div class="form-group">
+        <label for="cancelReasonInput">Cancellation Reason <span style="color:var(--red)">*</span></label>
+        <textarea 
+          class="form-control" 
+          id="cancelReasonInput" 
+          rows="4" 
+          placeholder="e.g. Found a better price elsewhere, Changed my mind, Ordered by mistake..."
+          maxlength="500"
+        ></textarea>
+        <div style="font-size:0.75rem;color:var(--gray-text);margin-top:6px;text-align:right">
+          <span id="cancelReasonCount">0</span>/500 characters
+        </div>
+      </div>
+      <div style="display:flex;gap:10px;margin-top:20px">
+        <button class="btn btn-primary" onclick="submitCancellation()" style="flex:1">
+          Submit Cancellation Request
+        </button>
+        <button class="btn btn-outline" onclick="closeCancelModal()" style="flex:1">
+          Go Back
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<footer class="footer" id="footer"></footer>
+
+<script src="../assets/js/script.js"></script>
+<script>
+(function () {
+  'use strict';
+
+  if (!Auth.isLoggedIn()) {
+    window.location.href = 'login.html';
+    return;
+  }
+
+  let ordersData = [];
+
+  async function loadOrders() {
+    const { ok, data } = await apiFetch('/orders/');
+    const tbody    = document.getElementById('ordersTable');
+    const cards    = document.getElementById('orderCards');
+    const countEl  = document.getElementById('ordersCount');
+
+    if (!ok) {
+      tbody.innerHTML = '<tr><td colspan="7" style="padding:40px;text-align:center;color:var(--red)">' + (data?.error || 'Failed to load orders') + '</td></tr>';
+      return;
+    }
+
+    ordersData = data.orders || [];
+    countEl.textContent = ordersData.length + ' order' + (ordersData.length !== 1 ? 's' : '');
+
+    if (ordersData.length === 0) {
+      const emptyHtml = `
+        <div class="empty-state" style="padding: 40px 20px; text-align: center;">
+          <div class="icon" style="font-size: 3rem; margin-bottom: 1rem;">📦</div>
+          <h3>No Orders Yet</h3>
+          <p>You haven't placed any orders. When you do, they'll show up here.</p>
+          <a href="product.html" class="btn btn-primary mt-16">Start Shopping</a>
+        </div>`;
+      tbody.innerHTML = `<tr><td colspan="7">${emptyHtml}</td></tr>`;
+      // For the mobile view, we wrap the content in an .order-card div.
+      // This class is hidden by default on desktop and shown on mobile via the existing CSS media query.
+      cards.innerHTML = `<div class="order-card">${emptyHtml}</div>`;
+      return;
+    }
+
+    // Desktop rows
+    tbody.innerHTML = ordersData.map(function(o) {
+      var items = (o.items || []).slice(0, 2).map(function(i) { return (i.product_name || i.name || 'Item') + ' ×' + i.quantity; }).join(', ');
+      if ((o.items || []).length > 2) items += '…';
+      
+      // Determine which action buttons to show
+      var actionBtn = '—';
+      if (o.status === 'cancel_requested') {
+        actionBtn = '<span style="background:#fef3c7;color:#92400e;padding:4px 10px;border-radius:4px;font-size:0.74rem;font-weight:600">Pending Approval</span>';
+      } else if (o.status === 'pending' || o.status === 'processing') {
+        actionBtn = '<button class="btn btn-danger btn-sm" onclick="event.stopPropagation();cancelOrder(' + o.id + ')">Cancel</button>';
+      } else if (o.status === 'cancelled' || o.status === 'delivered') {
+        actionBtn = '<button class="btn btn-danger btn-sm" onclick="event.stopPropagation();deleteOrder(' + o.id + ')">Delete</button>';
+      }
+      
+      return '<tr style="cursor:pointer" onclick="openDetail(' + o.id + ')">' +
+        '<td><span class="font-mono fw-700">#' + o.id + '</span></td>' +
+        '<td><span class="font-mono" style="font-size:0.8rem;color:var(--red);font-weight:600">' + (o.tracking_id || '—') + '</span></td>' +
+        '<td style="font-size:0.85rem">' + formatDate(o.date) + '</td>' +
+        '<td style="font-size:0.85rem;max-width:240px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">' + items + '</td>' +
+        '<td><span class="font-display" style="color:var(--red);font-weight:700">' + formatPrice(o.total_price) + '</span></td>' +
+        '<td>' + statusBadge(o.status) + '</td>' +
+        '<td>' + actionBtn + '</td>' +
+      '</tr>';
+    }).join('');
+
+    // Mobile cards
+    cards.innerHTML = ordersData.map(function(o) {
+      var items = (o.items || []).map(function(i) { return (i.product_name || i.name || 'Item') + ' ×' + i.quantity; }).join(', ');
+      return '<div class="order-card" onclick="openDetail(' + o.id + ')">' +
+        '<div class="order-card-top">' +
+          '<span class="order-id">#' + o.id + '</span>' +
+          statusBadge(o.status) +
+        '</div>' +
+        '<div class="flex-between">' +
+          '<span class="order-date">' + formatDate(o.date) + '</span>' +
+          '<span class="order-total">' + formatPrice(o.total_price) + '</span>' +
+        '</div>' +
+        '<div class="order-items-preview">' + items + '</div>' +
+      '</div>';
+    }).join('');
+  }
+
+  window.openDetail = function(id) {
+    const order = ordersData.find(function(o) { return o.id == id; });
+    if (!order) return;
+
+    var canCancel = order.status === 'pending' || order.status === 'processing';
+    var canDelete = order.status === 'cancelled' || order.status === 'delivered';
+    var isPendingCancel = order.status === 'cancel_requested';
+    
+    var itemsHtml = (order.items || []).map(function(i) {
+      return '<div class="detail-row"><span>' + (i.product_name || i.name || 'Item') + ' ×' + i.quantity + '</span><span>' + formatPrice(i.subtotal || 0) + '</span></div>';
+    }).join('') || '<p class="text-gray">No items</p>';
+
+    var actionButtons = '';
+    if (isPendingCancel) {
+      actionButtons = '<div style="background:#fef3c7;padding:12px;border-radius:6px;margin-top:16px;font-size:0.85rem;color:#92400e">' +
+        '<strong>Cancellation Requested</strong><br>' +
+        'Waiting for admin approval.' +
+        (order.cancel_reason ? '<div style="margin-top:8px;font-size:0.8rem">Reason: ' + order.cancel_reason + '</div>' : '') +
+        '</div>';
+    } else if (canCancel) {
+      actionButtons = '<button class="btn btn-danger btn-sm mt-16" onclick="cancelOrder(' + order.id + ')">Cancel Order</button>';
+    } else if (canDelete) {
+      actionButtons = '<button class="btn btn-danger btn-sm mt-16" onclick="deleteOrder(' + order.id + ')">Delete Order</button>';
+    }
+
+    document.getElementById('orderModalContent').innerHTML =
+      '<div style="background:var(--gray-light);border-radius:var(--radius);padding:16px;margin-bottom:20px;font-size:0.88rem">' +
+        '<div class="detail-row"><span>Order ID</span><span class="font-mono">#' + order.id + '</span></div>' +
+        (order.tracking_id ? '<div class="detail-row"><span>Tracking ID</span><span class="font-mono" style="font-weight:700;color:var(--red)">' + order.tracking_id + '</span></div>' : '') +
+        '<div class="detail-row"><span>Date</span><span>' + formatDate(order.date) + '</span></div>' +
+        '<div class="detail-row"><span>Status</span><span>' + statusBadge(order.status) + '</span></div>' +
+        '<div class="detail-row"><span>Total</span><span class="font-display" style="color:var(--red);font-weight:700">' + formatPrice(order.total_price) + '</span></div>' +
+      '</div>' +
+      '<h4 style="margin-bottom:12px">Items</h4>' +
+      itemsHtml +
+      actionButtons;
+
+    document.getElementById('orderModal').classList.remove('hidden');
+  };
+
+  window.deleteOrder = async function(id) {
+    if (!confirm('Delete order #' + id + '? This cannot be undone.')) return;
+    const { ok, data } = await apiFetch('/orders/delete/' + id + '/', { method: 'DELETE' });
+    if (ok) {
+      Toast.success('Order deleted.');
+      document.getElementById('orderModal').classList.add('hidden');
+      loadOrders();
+    } else {
+      Toast.error(data?.error || 'Failed to delete order.');
+    }
+  };
+
+  window.cancelOrder = function(id) {
+    document.getElementById('cancelOrderId').value = id;
+    document.getElementById('cancelReasonInput').value = '';
+    document.getElementById('cancelReasonCount').textContent = '0';
+    document.getElementById('orderModal').classList.add('hidden');
+    document.getElementById('cancelOrderModal').classList.remove('hidden');
+  };
+
+  window.closeCancelModal = function() {
+    document.getElementById('cancelOrderModal').classList.add('hidden');
+  };
+
+  window.submitCancellation = async function() {
+    const id = document.getElementById('cancelOrderId').value;
+    const reason = document.getElementById('cancelReasonInput').value.trim();
+    
+    if (!reason) {
+      Toast.error('Please provide a cancellation reason.');
+      document.getElementById('cancelReasonInput').focus();
+      return;
+    }
+
+    if (reason.length < 10) {
+      Toast.error('Please provide a more detailed reason (at least 10 characters).');
+      document.getElementById('cancelReasonInput').focus();
+      return;
+    }
+    
+    const { ok, data } = await apiFetch('/orders/' + id + '/cancel/', { 
+      method: 'POST',
+      body: JSON.stringify({ reason: reason })
+    });
+    
+    if (ok) {
+      Toast.success(data.message || 'Cancellation request submitted. Waiting for admin approval.');
+      document.getElementById('cancelOrderModal').classList.add('hidden');
+      loadOrders();
+    } else {
+      Toast.error(data?.error || 'Failed to submit cancellation request.');
+    }
+  };
+
+  // Character counter for cancel reason and initialize
+  document.addEventListener('DOMContentLoaded', function() {
+    const textarea = document.getElementById('cancelReasonInput');
+    if (textarea) {
+      textarea.addEventListener('input', function() {
+        document.getElementById('cancelReasonCount').textContent = this.value.length;
+      });
+    }
+    
+    loadOrders();
+  });
+
+  // Close modal on Escape key
+  document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') {
+      closeCancelModal();
+    }
+  });
+})();
+</script>
+</body>
+</html>

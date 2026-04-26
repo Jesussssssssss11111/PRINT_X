@@ -1,0 +1,387 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="icon" href="../favicon.ico" type="image/x-icon">
+  <title>Track Order – Print X</title>
+  <link rel="stylesheet" href="../assets/css/style.css">
+  <style>
+    .track-hero {
+      background: var(--dark);
+      padding: 60px 0;
+      text-align: center;
+    }
+
+    .track-hero h1 {
+      color: white;
+      margin-bottom: 12px;
+    }
+
+    .track-hero p {
+      color: rgba(255,255,255,0.6);
+      margin-bottom: 32px;
+    }
+
+    .track-input-wrap {
+      max-width: 500px;
+      margin: 0 auto;
+      display: flex;
+      gap: 12px;
+    }
+
+    .track-input {
+      flex: 1;
+      padding: 14px 18px;
+      border-radius: var(--radius);
+      border: 2px solid rgba(255,255,255,0.2);
+      background: rgba(255,255,255,0.1);
+      color: white;
+      font-size: 1rem;
+      font-family: var(--font-mono);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    .track-input::placeholder {
+      color: rgba(255,255,255,0.4);
+      text-transform: none;
+      letter-spacing: 0;
+    }
+
+    .track-input:focus {
+      outline: none;
+      border-color: var(--red);
+      background: rgba(255,255,255,0.15);
+    }
+
+    .track-btn {
+      padding: 14px 32px;
+      background: var(--red);
+      color: white;
+      border: none;
+      border-radius: var(--radius);
+      font-weight: 700;
+      cursor: pointer;
+      transition: all var(--transition);
+    }
+
+    .track-btn:hover {
+      background: var(--red-dark);
+      transform: translateY(-2px);
+    }
+
+    .track-btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    .track-result {
+      max-width: 800px;
+      margin: 40px auto;
+      display: none;
+    }
+
+    .track-result.show {
+      display: block;
+    }
+
+    .order-header {
+      background: var(--white);
+      border-radius: var(--radius-lg);
+      padding: 28px;
+      margin-bottom: 24px;
+      box-shadow: var(--shadow);
+      border: 1px solid var(--gray-mid);
+    }
+
+    .order-id-display {
+      font-family: var(--font-mono);
+      font-size: 1.2rem;
+      font-weight: 700;
+      color: var(--dark);
+      margin-bottom: 8px;
+    }
+
+    .order-total {
+      font-size: 1.4rem;
+      font-weight: 900;
+      color: var(--red);
+      font-family: var(--font-display);
+    }
+
+    .status-timeline {
+      background: var(--white);
+      border-radius: var(--radius-lg);
+      padding: 32px;
+      margin-bottom: 24px;
+      box-shadow: var(--shadow);
+      border: 1px solid var(--gray-mid);
+    }
+
+    .timeline-title {
+      font-family: var(--font-display);
+      font-size: 1.1rem;
+      margin-bottom: 28px;
+      color: var(--dark);
+    }
+
+    .timeline {
+      position: relative;
+      padding-left: 40px;
+    }
+
+    .timeline::before {
+      content: '';
+      position: absolute;
+      left: 15px;
+      top: 0;
+      bottom: 0;
+      width: 2px;
+      background: var(--gray-mid);
+    }
+
+    .timeline-item {
+      position: relative;
+      padding-bottom: 32px;
+    }
+
+    .timeline-item:last-child {
+      padding-bottom: 0;
+    }
+
+    .timeline-dot {
+      position: absolute;
+      left: -28px;
+      top: 4px;
+      width: 16px;
+      height: 16px;
+      border-radius: 50%;
+      background: var(--gray-mid);
+      border: 3px solid var(--white);
+      box-shadow: 0 0 0 2px var(--gray-mid);
+    }
+
+    .timeline-item.completed .timeline-dot {
+      background: var(--red);
+      box-shadow: 0 0 0 2px var(--red), 0 0 12px rgba(232,0,13,0.3);
+    }
+
+    .timeline-label {
+      font-weight: 700;
+      color: var(--dark);
+      margin-bottom: 4px;
+    }
+
+    .timeline-item.completed .timeline-label {
+      color: var(--red);
+    }
+
+    .timeline-date {
+      font-size: 0.85rem;
+      color: var(--gray-text);
+      font-family: var(--font-mono);
+    }
+
+    .order-items-card {
+      background: var(--white);
+      border-radius: var(--radius-lg);
+      padding: 28px;
+      box-shadow: var(--shadow);
+      border: 1px solid var(--gray-mid);
+    }
+
+    .items-title {
+      font-family: var(--font-display);
+      font-size: 1.1rem;
+      margin-bottom: 20px;
+      color: var(--dark);
+    }
+
+    .item-row {
+      display: flex;
+      justify-content: space-between;
+      padding: 12px 0;
+      border-bottom: 1px solid var(--gray-mid);
+    }
+
+    .item-row:last-child {
+      border-bottom: none;
+    }
+
+    .item-name {
+      font-weight: 600;
+    }
+
+    .item-qty {
+      color: var(--gray-text);
+      font-size: 0.9rem;
+      margin-top: 4px;
+    }
+
+    .item-price {
+      font-weight: 700;
+      color: var(--red);
+    }
+
+    .error-display {
+      max-width: 500px;
+      margin: 40px auto;
+      background: #fee2e2;
+      color: #991b1b;
+      padding: 20px 24px;
+      border-radius: var(--radius-lg);
+      border-left: 4px solid var(--red);
+      display: none;
+    }
+
+    .error-display.show {
+      display: block;
+    }
+
+    @media (max-width: 600px) {
+      .track-input-wrap {
+        flex-direction: column;
+      }
+      
+      .timeline {
+        padding-left: 32px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header class="navbar" id="navbar"></header>
+
+  <div class="track-hero">
+    <div class="container">
+      <h1>📦 Track Your Order</h1>
+      <p>Enter your tracking ID to see your order status</p>
+      <div class="track-input-wrap">
+        <input 
+          type="text" 
+          class="track-input" 
+          id="trackingInput" 
+          placeholder="Enter tracking ID (e.g., ABC123XYZ456)"
+          maxlength="32"
+          onkeydown="if(event.key==='Enter')trackOrder()"
+        >
+        <button class="track-btn" id="trackBtn" onclick="trackOrder()">Track Order</button>
+      </div>
+    </div>
+  </div>
+
+  <section class="section">
+    <div class="container">
+      <div class="error-display" id="errorDisplay"></div>
+
+      <div class="track-result" id="trackResult">
+        <div class="order-header">
+          <div class="order-id-display" id="orderIdDisplay"></div>
+          <div class="order-total" id="orderTotal"></div>
+        </div>
+
+        <div class="status-timeline">
+          <h3 class="timeline-title">Order Status Timeline</h3>
+          <div class="timeline" id="timeline"></div>
+        </div>
+
+        <div class="order-items-card">
+          <h3 class="items-title">Order Items</h3>
+          <div id="orderItems"></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <footer class="footer" id="footer"></footer>
+  <div class="toast-container"></div>
+
+  <script src="../assets/js/script.js"></script>
+  <script>
+    async function trackOrder() {
+      const trackingId = document.getElementById('trackingInput').value.trim().toUpperCase();
+      const btn = document.getElementById('trackBtn');
+      const errorDisplay = document.getElementById('errorDisplay');
+      const trackResult = document.getElementById('trackResult');
+
+      // Hide previous results
+      errorDisplay.classList.remove('show');
+      trackResult.classList.remove('show');
+
+      if (!trackingId) {
+        errorDisplay.textContent = 'Please enter a tracking ID.';
+        errorDisplay.classList.add('show');
+        return;
+      }
+
+      btn.disabled = true;
+      btn.textContent = 'Tracking...';
+
+      try {
+        const res = await apiFetch(`/track/${trackingId}/`);
+
+        if (res.ok && res.data.order) {
+          displayOrderTracking(res.data.order);
+        } else {
+          errorDisplay.textContent = res.data.error || 'Order not found. Please check your tracking ID.';
+          errorDisplay.classList.add('show');
+        }
+      } catch (err) {
+        errorDisplay.textContent = 'Failed to track order. Please try again.';
+        errorDisplay.classList.add('show');
+      } finally {
+        btn.disabled = false;
+        btn.textContent = 'Track Order';
+      }
+    }
+
+    function displayOrderTracking(order) {
+      const trackResult = document.getElementById('trackResult');
+      
+      // Order header with estimated delivery date
+      let headerHtml = `Order #${order.id} • ${order.tracking_id}`;
+      if (order.estimated_delivery_date) {
+        headerHtml += `<div style="font-size:0.85rem;color:var(--gray-text);margin-top:8px;font-family:var(--font-body)">
+          📅 Estimated Delivery: <strong style="color:var(--red)">${formatDate(order.estimated_delivery_date)}</strong>
+        </div>`;
+      }
+      document.getElementById('orderIdDisplay').innerHTML = headerHtml;
+      document.getElementById('orderTotal').textContent = formatPrice(order.total_price);
+
+      // Timeline
+      const timeline = document.getElementById('timeline');
+      timeline.innerHTML = order.status_timeline.map(item => `
+        <div class="timeline-item ${item.completed ? 'completed' : ''}">
+          <div class="timeline-dot"></div>
+          <div class="timeline-label">${item.label}</div>
+          ${item.date ? `<div class="timeline-date">${formatDate(item.date)}</div>` : ''}
+        </div>
+      `).join('');
+
+      // Order items
+      const orderItems = document.getElementById('orderItems');
+      orderItems.innerHTML = order.items.map(item => `
+        <div class="item-row">
+          <div>
+            <div class="item-name">${item.name}</div>
+            <div class="item-qty">Quantity: ${item.quantity} × ${formatPrice(item.price)}</div>
+          </div>
+          <div class="item-price">${formatPrice(item.subtotal)}</div>
+        </div>
+      `).join('');
+
+      trackResult.classList.add('show');
+    }
+
+    // Check if tracking ID is in URL
+    const urlParams = new URLSearchParams(window.location.search);
+    const trackingIdFromUrl = urlParams.get('id');
+    if (trackingIdFromUrl) {
+      document.getElementById('trackingInput').value = trackingIdFromUrl;
+      trackOrder();
+    }
+  </script>
+</body>
+</html>

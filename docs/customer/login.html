@@ -1,0 +1,440 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Login – Print X</title>
+  <link rel="stylesheet" href="../assets/css/style.css" />
+  <style>
+    .auth-wrapper {
+      min-height: calc(100vh - var(--nav-height));
+      background: var(--dark);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 40px 24px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .auth-wrapper::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background:
+        radial-gradient(circle at 20% 50%, rgba(255,0,0,0.1) 0%, transparent 50%),
+        radial-gradient(circle at 80% 50%, rgba(255,0,0,0.07) 0%, transparent 50%);
+    }
+
+    .auth-wrapper::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background-image:
+        linear-gradient(rgba(255,0,0,0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,0,0,0.03) 1px, transparent 1px);
+      background-size: 48px 48px;
+    }
+
+    .auth-card {
+      background: var(--white);
+      border-radius: var(--radius-lg);
+      width: 100%;
+      max-width: 460px;
+      box-shadow: 0 32px 80px rgba(0,0,0,0.3);
+      position: relative;
+      z-index: 1;
+      overflow: hidden;
+    }
+
+    .auth-header {
+      background: var(--dark);
+      padding: 32px;
+      text-align: center;
+      border-bottom: 3px solid var(--red);
+    }
+
+    .auth-logo {
+      font-family: var(--font-display);
+      font-size: 1.8rem;
+      font-weight: 900;
+      color: white;
+      letter-spacing: 0.05em;
+      margin-bottom: 8px;
+    }
+
+    .auth-logo span { color: var(--red); }
+
+    .auth-subtitle {
+      color: rgba(255,255,255,0.5);
+      font-size: 0.85rem;
+    }
+
+    .auth-tabs {
+      display: flex;
+      border-bottom: 2px solid var(--gray-mid);
+    }
+
+    .auth-tab {
+      flex: 1;
+      padding: 14px;
+      text-align: center;
+      font-size: 0.88rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all var(--transition);
+      color: var(--gray-text);
+      background: var(--gray-light);
+      letter-spacing: 0.04em;
+      font-family: var(--font-display);
+    }
+
+    .auth-tab.active {
+      background: var(--white);
+      color: var(--red);
+      border-bottom: 2px solid var(--red);
+      margin-bottom: -2px;
+    }
+
+    .auth-body {
+      padding: 28px;
+    }
+    @media (max-width: 480px) { .auth-body { padding: 20px; } .auth-header { padding: 24px; } }
+
+    .auth-panel { display: none; }
+    .auth-panel.active { display: block; }
+
+    .form-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+    @media (max-width: 400px) { .form-row { grid-template-columns: 1fr; } }
+
+    .auth-footer-text {
+      text-align: center;
+      margin-top: 20px;
+      font-size: 0.82rem;
+      color: var(--gray-text);
+    }
+
+    .auth-footer-text a {
+      color: var(--red);
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+    .divider-text {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      color: var(--gray-text);
+      font-size: 0.78rem;
+      margin: 20px 0;
+    }
+
+    .divider-text::before,
+    .divider-text::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: var(--gray-mid);
+    }
+
+    .password-wrap {
+      position: relative;
+    }
+
+    .password-wrap input {
+      padding-right: 44px;
+    }
+
+    .toggle-password {
+      position: absolute;
+      right: 12px;
+      top: 50%;
+      transform: translateY(-50%);
+      background: none;
+      border: none;
+      cursor: pointer;
+      font-size: 1rem;
+      color: var(--gray-text);
+    }
+
+    .error-msg {
+      background: #fee2e2;
+      color: #991b1b;
+      padding: 10px 14px;
+      border-radius: var(--radius);
+      font-size: 0.84rem;
+      margin-bottom: 16px;
+      border-left: 3px solid var(--red);
+      display: none;
+    }
+
+    .error-msg.show { display: block; }
+
+    .success-msg {
+      background: #d1fae5;
+      color: #065f46;
+      padding: 10px 14px;
+      border-radius: var(--radius);
+      font-size: 0.84rem;
+      margin-bottom: 16px;
+      border-left: 3px solid #22c55e;
+      display: none;
+    }
+
+    .success-msg.show { display: block; }
+  </style>
+</head>
+<body>
+  <header class="navbar" id="navbar"></header>
+
+  <div class="auth-wrapper">
+    <div class="auth-card">
+      <div class="auth-header">
+        <div class="auth-logo">PRINT<span>X</span></div>
+        <div class="auth-subtitle">Your 3D Printing Portal</div>
+      </div>
+
+      <div class="auth-tabs">
+        <div class="auth-tab active" id="tab-login" onclick="switchTab('login')">Login</div>
+        <div class="auth-tab" id="tab-register" onclick="switchTab('register')">Register</div>
+      </div>
+
+      <div class="auth-body">
+        <!-- LOGIN PANEL -->
+        <div class="auth-panel active" id="panel-login">
+          <div class="error-msg" id="loginError"></div>
+          <div class="form-group">
+            <label>Username</label>
+            <input type="text" class="form-control" id="loginUsername" placeholder="Enter username" autocomplete="username" />
+          </div>
+          <div class="form-group">
+            <label>Password</label>
+            <div class="password-wrap">
+              <input type="password" class="form-control" id="loginPassword" placeholder="Enter password" autocomplete="current-password" onkeydown="if(event.key==='Enter')doLogin()" />
+              <button class="toggle-password" onclick="togglePwd('loginPassword', this)">👁️</button>
+            </div>
+          </div>
+          <button class="btn btn-primary btn-full" id="loginBtn" onclick="doLogin()" style="margin-top:8px;">
+            Login
+          </button>
+          <div class="auth-footer-text">
+            Don't have an account? <a onclick="switchTab('register')">Register here</a>
+          </div>
+        </div>
+
+        <!-- REGISTER PANEL -->
+        <div class="auth-panel" id="panel-register">
+          <div class="error-msg" id="registerError"></div>
+          <div class="success-msg" id="registerSuccess"></div>
+          <div class="form-row">
+            <div class="form-group">
+              <label>First Name</label>
+              <input type="text" class="form-control" id="regFirstName" placeholder="Juan" />
+            </div>
+            <div class="form-group">
+              <label>Last Name</label>
+              <input type="text" class="form-control" id="regLastName" placeholder="Cruz" />
+            </div>
+          </div>
+          <div class="form-group">
+            <label>Username <span style="color:var(--red)">*</span></label>
+            <input type="text" class="form-control" id="regUsername" placeholder="Choose a username" autocomplete="username" />
+          </div>
+          <div class="form-group">
+            <label>Email</label>
+            <input type="email" class="form-control" id="regEmail" placeholder="you@email.com" />
+          </div>
+          <div class="form-group">
+            <label>Password <span style="color:var(--red)">*</span></label>
+            <div class="password-wrap">
+              <input type="password" class="form-control" id="regPassword" placeholder="Min. 8 characters" autocomplete="new-password" />
+              <button class="toggle-password" onclick="togglePwd('regPassword', this)">👁️</button>
+            </div>
+          </div>
+          <div class="form-group">
+            <label>Confirm Password <span style="color:var(--red)">*</span></label>
+            <div class="password-wrap">
+              <input type="password" class="form-control" id="regConfirm" placeholder="Repeat password" autocomplete="new-password" onkeydown="if(event.key==='Enter')doRegister()" />
+              <button class="toggle-password" onclick="togglePwd('regConfirm', this)">👁️</button>
+            </div>
+          </div>
+          <button class="btn btn-primary btn-full" id="registerBtn" onclick="doRegister()">
+            Create Account
+          </button>
+          <div class="auth-footer-text">
+            Already have an account? <a onclick="switchTab('login')">Login here</a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="toast-container"></div>
+  <script src="../assets/js/script.js"></script>
+  <script>
+    // Redirect if already logged in
+    if (Auth.isAnyUser()) {
+      if (Auth.isAdmin()) window.location.href = '../admin/admin.html';
+      else window.location.href = 'index.html';
+    }
+
+    renderNavbar('');
+
+    if (window.location.hash === '#register') {
+      switchTab('register');
+    }
+
+    function switchTab(tab) {
+      document.querySelectorAll('.auth-tab').forEach(t => t.classList.remove('active'));
+      document.querySelectorAll('.auth-panel').forEach(p => p.classList.remove('active'));
+      document.getElementById(`tab-${tab}`).classList.add('active');
+      document.getElementById(`panel-${tab}`).classList.add('active');
+    }
+
+    function togglePwd(inputId, btn) {
+      const input = document.getElementById(inputId);
+      if (input.type === 'password') {
+        input.type = 'text';
+        btn.textContent = '🙈';
+      } else {
+        input.type = 'password';
+        btn.textContent = '👁️';
+      }
+    }
+
+    function showError(id, msg) {
+      const el = document.getElementById(id);
+      el.textContent = msg;
+      el.classList.add('show');
+    }
+
+    function hideError(id) {
+      document.getElementById(id).classList.remove('show');
+    }
+
+    async function doLogin() {
+      hideError('loginError');
+      const username = document.getElementById('loginUsername').value.trim();
+      const password = document.getElementById('loginPassword').value;
+
+      if (!username || !password) {
+        showError('loginError', 'Please enter both username and password.');
+        return;
+      }
+
+      const btn = document.getElementById('loginBtn');
+      btn.disabled = true;
+      btn.textContent = 'Logging in...';
+
+      const res = await apiFetch('/login/', {
+        method: 'POST',
+        body: JSON.stringify({ username, password }),
+      });
+
+      if (res.ok) {
+        if (res.data.is_admin) {
+          // Admin: store in px_admin_* keys so admin.html Auth override works correctly
+          localStorage.setItem('px_admin_access',  res.data.access);
+          localStorage.setItem('px_admin_refresh', res.data.refresh);
+          localStorage.setItem('px_admin_user', JSON.stringify({
+            ...res.data.user,
+            is_admin: true,
+          }));
+        } else {
+          Auth.setSession(res.data.access, res.data.refresh, {
+            ...res.data.user,
+            is_admin: false,
+          });
+          // Fetch profile data immediately after login
+          const profileRes = await apiFetch('/profile/');
+          if (profileRes.ok && profileRes.data.profile) {
+            localStorage.setItem('px_profile', JSON.stringify(profileRes.data.profile));
+          }
+        }
+        Toast.success('Logged in successfully!');
+        setTimeout(() => {
+          if (res.data.is_admin) {
+            window.location.href = '../admin/admin.html';
+          } else {
+            window.location.href = 'index.html';
+          }
+        }, 800);
+      } else {
+        showError('loginError', res.data?.error || 'Invalid username or password.');
+        btn.disabled = false;
+        btn.textContent = 'Login';
+      }
+    }
+
+    async function doRegister() {
+      hideError('registerError');
+      document.getElementById('registerSuccess').classList.remove('show');
+
+      const username  = document.getElementById('regUsername').value.trim();
+      const password  = document.getElementById('regPassword').value;
+      const confirm   = document.getElementById('regConfirm').value;
+      const email     = document.getElementById('regEmail').value.trim();
+      const firstName = document.getElementById('regFirstName').value.trim();
+      const lastName  = document.getElementById('regLastName').value.trim();
+
+      if (!username || !password) {
+        showError('registerError', 'Username and password are required.');
+        return;
+      }
+      if (password.length < 8) {
+        showError('registerError', 'Password must be at least 8 characters.');
+        return;
+      }
+      if (password !== confirm) {
+        showError('registerError', 'Passwords do not match.');
+        return;
+      }
+
+      const btn = document.getElementById('registerBtn');
+      btn.disabled = true;
+      btn.textContent = 'Creating account...';
+
+      const res = await apiFetch('/register/', {
+        method: 'POST',
+        body: JSON.stringify({ username, password, email, first_name: firstName, last_name: lastName }),
+      });
+
+      if (res.ok) {
+        const successEl = document.getElementById('registerSuccess');
+        successEl.textContent = 'Account created! Logging you in...';
+        successEl.classList.add('show');
+        Auth.setSession(res.data.access, res.data.refresh, {
+          ...res.data.user,
+          is_admin: false,
+        });
+        // Fetch profile data immediately after registration
+        const profileRes = await apiFetch('/profile/');
+        if (profileRes.ok && profileRes.data.profile) {
+          localStorage.setItem('px_profile', JSON.stringify(profileRes.data.profile));
+        }
+        setTimeout(() => {
+          window.location.href = 'index.html';
+        }, 1200);
+      } else {
+        const errs = res.data || {};
+        const msgs = Object.values(errs).flat().join(' ');
+        let errorMsg = 'Registration failed.';
+        if (msgs.toLowerCase().includes('email')) {
+          errorMsg = 'This email is already registered.';
+        } else if (msgs.toLowerCase().includes('username')) {
+          errorMsg = 'This username is already taken.';
+        } else if (msgs) {
+          errorMsg = msgs;
+        }
+        showError('registerError', errorMsg);
+        btn.disabled = false;
+        btn.textContent = 'Create Account';
+      }
+    }
+
+  </script>
+</body>

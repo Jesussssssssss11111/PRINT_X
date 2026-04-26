@@ -1,0 +1,629 @@
+================================================================================
+                    PRINT X - CODE DOCUMENTATION
+================================================================================
+
+PROJECT OVERVIEW
+----------------
+Print X is a full-stack 3D printing e-commerce platform with customer-facing 
+store and admin management panel. Built with Django REST Framework backend 
+and vanilla JavaScript frontend.
+
+================================================================================
+                        FOLDER STRUCTURE
+================================================================================
+
+/backend/
+---------
+PURPOSE: Django backend server handling all API requests, database operations,
+         authentication, and business logic.
+
+  /api/
+  -----
+  PURPOSE: Main Django app containing models, views, serializers, and API endpoints.
+  
+    models.py
+    ---------
+    LOGIC: Defines database schema using Django ORM
+    - Product: Store products with name, price, description, image, stock
+    - Cart: User shopping cart items with quantity
+    - Order: Customer orders with tracking ID, status, items snapshot, delivery date
+    - Payment: Payment records linked to orders (GCash, Maya, Bank Transfer)
+    - CustomRequest: Custom 3D print requests with STL file uploads
+    - UserProfile: Extended user data (phone, address, profile picture)
+    - ProductReview: Product ratings and comments (1-5 stars)
+    - Category: Product categorization
+    
+    views.py
+    --------
+    LOGIC: Main API endpoints using DRF decorators
+    - Authentication: register(), login_view(), logout_view() with JWT tokens
+    - Products: CRUD operations for products (public read, admin write)
+    - Cart: Add/update/remove items, calculate totals
+    - Orders: Checkout, view orders, track by ID
+    - Custom Requests: Submit STL files, upload, cancel
+    - Admin: Dashboard stats, manage orders/products/users
+    - Reviews: Get product reviews, add/edit/delete reviews
+    - Email: Send HTML emails for order status, custom approvals, cancellations
+    
+    new_features_views.py
+    ---------------------
+    LOGIC: Additional feature endpoints
+    - Order tracking by tracking_id (public, no auth)
+    - Order cancellation requests with approval workflow
+    - User profile management (view, update, change password)
+    - Revenue chart data for admin dashboard
+    - Phone number validation
+    
+    urls.py
+    -------
+    LOGIC: URL routing mapping endpoints to view functions
+    - /api/register/, /api/login/, /api/logout/
+    - /api/products/, /api/products/<id>/
+    - /api/cart/, /api/cart/add/, /api/cart/update/<id>/
+    - /api/checkout/, /api/orders/
+    - /api/custom/, /api/custom/<id>/upload/
+    - /api/admin/stats/, /api/admin/orders/, /api/admin/custom/
+    - /api/products/<id>/reviews/, /api/reviews/<id>/delete/
+    - /api/track/<tracking_id>/
+    
+    email_utils.py
+    --------------
+    LOGIC: Async email sending using threading
+    - send_email_async(): Sends emails in background thread to prevent blocking
+    - Prevents HTTP request delays when sending emails
+    
+    admin.py
+    --------
+    LOGIC: Django admin panel configuration
+    - Registers models for admin interface
+    
+    /migrations/
+    ------------
+    PURPOSE: Database schema version control
+    - 0001_initial.py: Initial models
+    - 0011_category_product_category_order_tracking_id: Added tracking system
+    - 0012_add_cancel_reason_and_status: Order cancellation feature
+    - 0013_order_estimated_delivery_date: Delivery date field
+    - 0014_productreview: Review system
+    
+  /printx/
+  --------
+  PURPOSE: Django project settings and configuration
+  
+    settings.py
+    -----------
+    LOGIC: Project configuration
+    - Database: SQLite (db.sqlite3)
+    - Email: Gmail SMTP with environment variables
+    - JWT: djangorestframework-simplejwt for authentication
+    - CORS: Allows frontend on different port
+    - Media: File uploads to /media/stl_files/
+    - Logging: Suppresses broken pipe errors
+    
+    urls.py
+    -------
+    LOGIC: Root URL configuration
+    - /api/: Routes to api.urls
+    - /admin/: Django admin panel
+    - /media/: Serves uploaded files
+    
+  /media/stl_files/
+  -----------------
+  PURPOSE: Storage for uploaded STL files from custom requests
+  
+  db.sqlite3
+  ----------
+  PURPOSE: SQLite database file storing all application data
+  
+  manage.py
+  ---------
+  PURPOSE: Django management script for running server, migrations, etc.
+  
+  start_server.bat
+  ----------------
+  LOGIC: Windows batch script to start Django server with email config
+  - Sets EMAIL_HOST_USER and EMAIL_HOST_PASSWORD environment variables
+  - Runs: python manage.py runserver
+  
+  requirements.txt
+  ----------------
+  PURPOSE: Python dependencies list for pip install
+
+/docs/
+------
+PURPOSE: Frontend static files (HTML, CSS, JavaScript)
+
+  /customer/
+  ----------
+  PURPOSE: Customer-facing store pages
+  
+    index.html
+    ----------
+    LOGIC: Homepage with hero section, features, team, contact
+    - Video background
+    - Smooth scroll navigation
+    - Responsive design
+    
+    login.html
+    ----------
+    LOGIC: Login and registration forms
+    - JWT authentication
+    - Stores tokens in localStorage (px_access, px_refresh, px_user)
+    - Fetches profile data after login
+    - Redirects to previous page or home
+    
+    product.html
+    ------------
+    LOGIC: Product catalog with search, sort, filters
+    - Loads products from /api/products/
+    - Product detail modal with full info and reviews
+    - Add to cart functionality
+    - Review system: view, add, edit, delete reviews
+    - Interactive 5-star rating input
+    - Average rating display
+    
+    cart.html
+    ---------
+    LOGIC: Shopping cart with item management
+    - Checkbox selection system for items
+    - Select All functionality
+    - Displays regular products and approved custom requests
+    - Dynamic total calculation
+    - Stores selected items in sessionStorage for checkout
+    - Remove items or update quantities
+    
+    checkout.html
+    -------------
+    LOGIC: Order checkout and payment
+    - Loads selected items from sessionStorage
+    - Payment method selection (GCash, Maya, Bank Transfer)
+    - QR code display for payments
+    - Reference number input
+    - Address and phone validation
+    - Payment verification polling
+    - Redirects to success page with tracking ID
+    - Mobile-responsive order summary
+    
+    orders.html
+    -----------
+    LOGIC: Customer order history
+    - Lists all user orders with tracking IDs
+    - Expandable order details
+    - Order status badges
+    - Cancel order requests with reason
+    - Delete cancelled/delivered orders
+    
+    track.html
+    ----------
+    LOGIC: Public order tracking by tracking ID
+    - No authentication required
+    - Case-insensitive tracking ID lookup
+    - Status timeline visualization
+    - Estimated delivery date display
+    - Order details and items list
+    
+    custom.html
+    -----------
+    LOGIC: Custom 3D print request submission
+    - STL file upload with drag-and-drop
+    - Material and color selection
+    - Quantity and notes input
+    - File size validation
+    - Request status tracking
+    - Cancel pending requests
+    
+    profile.html
+    ------------
+    LOGIC: User profile management
+    - View/edit personal info
+    - Profile picture upload
+    - Change password
+    - Logout functionality
+    
+    about.html
+    ----------
+    LOGIC: About page with company info, team, mission
+    
+  /admin/
+  -------
+  PURPOSE: Admin management panel
+  
+    admin.html
+    ----------
+    LOGIC: Complete admin dashboard (single-page app)
+    
+    AUTHENTICATION:
+    - Separate admin login screen
+    - JWT authentication with px_admin_* localStorage keys
+    - Checks is_admin flag from backend
+    
+    NAVIGATION:
+    - Sidebar menu (fixed on desktop, overlay on mobile)
+    - Horizontal scroll nav (sticky)
+    - Panel switching without page reload
+    
+    DASHBOARD PANEL:
+    - Stats cards: orders, revenue, products, users, pending custom
+    - Recent orders table
+    - Custom requests preview
+    
+    PRODUCTS PANEL:
+    - Add/edit product form with image preview
+    - Products table with edit/delete actions
+    - Inline editing
+    
+    ORDERS PANEL:
+    - All orders table with status dropdowns
+    - Payment info and reference numbers
+    - Delivery date modal for processing/shipped status
+    - Cancel request approval/rejection
+    - Delete orders
+    
+    CUSTOM REQUESTS PANEL:
+    - Custom requests table
+    - Inline price editing
+    - Status dropdown (pending → approved → printing → completed)
+    - Download STL files
+    - Download order details as text
+    - Cancel with reason (sends email)
+    
+    USERS PANEL:
+    - Registered users list
+    - User details (username, email, join date)
+    
+    REVIEWS PANEL:
+    - All product reviews across products
+    - Star ratings display
+    - Delete reviews
+    
+    MODALS:
+    - Delivery date modal: Required for processing/shipped status
+    - Cancel modal: Reason input for cancelling custom requests
+    
+  /assets/
+  --------
+  PURPOSE: Shared CSS and JavaScript files
+  
+    /css/style.css
+    --------------
+    LOGIC: Global styles and responsive design
+    - CSS variables for colors, fonts, spacing
+    - Responsive breakpoints (mobile, tablet, desktop)
+    - clamp() for fluid typography
+    - Grid layouts with auto-fit/minmax
+    - Component styles: buttons, forms, cards, tables, modals
+    - Navbar with profile dropdown
+    - Footer 5-column layout
+    - Toast notifications
+    - Loading spinners
+    - Status badges
+    
+    /js/script.js
+    -------------
+    LOGIC: Shared JavaScript utilities
+    
+    Auth object:
+    - getAccess(), getRefresh(), getUser(): Read from localStorage
+    - setSession(): Store JWT tokens and user data
+    - clearSession(): Remove all auth data
+    - isLoggedIn(), isAdmin(): Check authentication state
+    
+    apiFetch():
+    - Wrapper for fetch API with JWT token injection
+    - Automatic token refresh on 401 errors
+    - JSON parsing and error handling
+    
+    Toast object:
+    - success(), error(), info(): Show toast notifications
+    - Auto-dismiss after 4 seconds
+    
+    renderNavbar():
+    - Dynamic navbar with login/logout state
+    - Profile dropdown menu
+    - Cart badge with count
+    
+    renderFooter():
+    - 5-column footer layout
+    
+    updateCartCount():
+    - Fetches cart items + approved custom requests
+    - Updates badge count
+    
+    Utility functions:
+    - formatPrice(): Format numbers as currency (₱)
+    - formatDate(): Format ISO dates to readable format
+    - statusBadge(): Generate colored status badges
+    - showModal(), hideModal(): Modal controls
+
+/GUIDE/
+-------
+PURPOSE: Documentation and setup guides
+
+  QUICK_START.md
+  --------------
+  Quick setup instructions for running the project
+  
+  SETUP_GUIDE.md
+  --------------
+  Detailed installation and configuration guide
+  
+  EMAIL_CONFIGURED.md
+  -------------------
+  Email system setup with Gmail SMTP
+  
+  NEW_FEATURES_GUIDE.md
+  ---------------------
+  Documentation of all implemented features
+  
+  FINAL_SUMMARY.md
+  ----------------
+  Complete project summary and feature list
+
+================================================================================
+                        KEY TECHNICAL CONCEPTS
+================================================================================
+
+AUTHENTICATION FLOW
+-------------------
+1. User submits login credentials
+2. Backend validates and returns JWT access + refresh tokens
+3. Frontend stores tokens in localStorage
+4. All API requests include: Authorization: Bearer <access_token>
+5. On 401 error, frontend uses refresh token to get new access token
+6. If refresh fails, user is logged out
+
+CART SELECTION SYSTEM
+----------------------
+1. Cart page displays checkboxes for each item
+2. JavaScript Sets track selected items (selectedItems, selectedCustomItems)
+3. "Select All" toggles all checkboxes
+4. Dynamic summary calculates total for selected items only
+5. On checkout click, selected IDs stored in sessionStorage
+6. Checkout page reads sessionStorage and filters items
+
+ORDER TRACKING SYSTEM
+----------------------
+1. Order created → generate_tracking_id() creates 16-char hex ID
+2. Tracking ID stored in Order.tracking_id field (unique)
+3. Public endpoint /api/track/<tracking_id>/ (no auth required)
+4. Case-insensitive lookup
+5. Returns order status and details
+
+EMAIL NOTIFICATION SYSTEM
+--------------------------
+1. Admin updates order status → _send_status_email() called
+2. Email sent asynchronously via threading (email_utils.py)
+3. HTML email templates with order details
+4. Gmail SMTP with app password from environment variables
+5. Falls back to console backend if credentials not set
+
+REVIEW SYSTEM
+-------------
+1. ProductReview model with unique constraint (user + product)
+2. One review per user per product
+3. Update existing review if user reviews again
+4. Average rating calculated on-the-fly
+5. Admin and review owner can delete reviews
+
+RESPONSIVE DESIGN
+-----------------
+1. Mobile-first approach
+2. CSS clamp() for fluid typography: clamp(min, preferred, max)
+3. Grid auto-fit: repeat(auto-fit, minmax(min, 1fr))
+4. Breakpoints: 480px, 700px, 860px, 900px, 1200px
+5. rem units for zoom accessibility
+6. Minimum touch targets: 2.5rem (40px)
+
+ADMIN PANEL ARCHITECTURE
+-------------------------
+1. Single-page application (no page reloads)
+2. Panel switching via showPanel() function
+3. Separate localStorage keys (px_admin_*)
+4. Sidebar + horizontal scroll nav (synced)
+5. Mobile: sidebar becomes overlay
+6. Each panel loads data on activation
+
+CUSTOM REQUEST WORKFLOW
+------------------------
+1. Customer submits STL file + specs → status: pending
+2. Admin reviews → status: reviewing
+3. Admin sets price → status: approved (email sent)
+4. Approved request appears in customer cart
+5. Customer checks out → status: completed
+6. Admin can cancel with reason (email sent)
+
+DELIVERY DATE SYSTEM
+--------------------
+1. Admin changes order to "processing" or "shipped"
+2. Modal appears requiring delivery date input
+3. Date validated (must be future date)
+4. Date stored in Order.estimated_delivery_date
+5. Displayed on public tracking page
+6. Included in status update email
+
+================================================================================
+                        DATABASE SCHEMA
+================================================================================
+
+User (Django built-in)
+- id, username, email, password, first_name, last_name, date_joined
+
+Product
+- id, name, price, description, image, stock, category_id, created_at
+
+Cart
+- id, user_id, product_id, quantity, added_at
+- UNIQUE(user_id, product_id)
+
+Order
+- id, user_id, tracking_id (unique), total_price, status, address, phone
+- items_snapshot (JSON), notes, cancel_reason, estimated_delivery_date
+- created_at, updated_at
+
+Payment
+- id, order_id, method, amount, status, reference_number, created_at
+
+CustomRequest
+- id, user_id, file_name, file_size, stl_file, material, color, quantity
+- notes, estimated_price, status, cancel_reason, created_at
+
+UserProfile
+- id, user_id (unique), phone, address, profile_picture, created_at, updated_at
+
+ProductReview
+- id, product_id, user_id, rating (1-5), comment, created_at, updated_at
+- UNIQUE(product_id, user_id)
+
+Category
+- id, name (unique), description, created_at
+
+================================================================================
+                        API ENDPOINTS
+================================================================================
+
+PUBLIC ENDPOINTS (No Auth)
+---------------------------
+POST   /api/register/                    - Create account
+POST   /api/login/                       - Login (returns JWT)
+GET    /api/products/                    - List products
+GET    /api/products/<id>/               - Product details
+GET    /api/products/<id>/reviews/       - Product reviews
+GET    /api/track/<tracking_id>/         - Track order (public)
+
+AUTHENTICATED ENDPOINTS
+-----------------------
+POST   /api/logout/                      - Logout (blacklist token)
+GET    /api/cart/                        - View cart
+POST   /api/cart/add/                    - Add to cart
+PUT    /api/cart/update/<id>/            - Update quantity
+DELETE /api/cart/remove/<id>/            - Remove item
+DELETE /api/cart/remove-custom/<id>/     - Remove custom request
+POST   /api/checkout/                    - Place order
+GET    /api/orders/                      - My orders
+POST   /api/orders/<id>/cancel/          - Request cancellation
+DELETE /api/orders/delete/<id>/          - Delete order
+POST   /api/custom/                      - Submit custom request
+PATCH  /api/custom/<id>/upload/          - Upload STL file
+POST   /api/custom/cancel/<id>/          - Cancel request
+GET    /api/profile/                     - View profile
+PUT    /api/profile/                     - Update profile
+POST   /api/profile/change-password/     - Change password
+POST   /api/products/<id>/reviews/add/   - Add/update review
+DELETE /api/reviews/<id>/delete/         - Delete review
+
+ADMIN ENDPOINTS (Requires is_superuser)
+---------------------------------------
+GET    /api/admin/stats/                 - Dashboard stats
+GET    /api/admin/orders/                - All orders
+PATCH  /api/admin/orders/<id>/status/    - Update order status
+DELETE /api/admin/orders/delete/<id>/    - Delete order
+POST   /api/admin/orders/<id>/approve-cancel/ - Approve cancellation
+POST   /api/admin/orders/<id>/reject-cancel/  - Reject cancellation
+GET    /api/admin/custom/                - All custom requests
+PATCH  /api/admin/custom/<id>/status/    - Update status/price
+POST   /api/admin/custom/cancel/<id>/    - Cancel with reason
+DELETE /api/admin/custom/delete/<id>/    - Delete request
+GET    /api/admin/custom/<id>/download/  - Download STL
+GET    /api/admin/custom/<id>/download-order/ - Download order details
+GET    /api/admin/users/                 - All users
+POST   /api/products/                    - Create product
+PUT    /api/products/<id>/               - Update product
+DELETE /api/products/<id>/               - Delete product
+
+================================================================================
+                        ENVIRONMENT VARIABLES
+================================================================================
+
+EMAIL_HOST_USER=3dprintxcontact@gmail.com
+EMAIL_HOST_PASSWORD=mugptymalyopurwb
+
+Set in start_server.bat before running Django server.
+Without these, emails print to console instead of sending via SMTP.
+
+================================================================================
+                        RUNNING THE PROJECT
+================================================================================
+
+1. Install Python dependencies:
+   cd backend
+   pip install -r requirements.txt
+
+2. Run migrations:
+   python manage.py migrate
+
+3. Create superuser (admin):
+   python manage.py createsuperuser
+
+4. Start server with email config:
+   start_server.bat
+   
+   OR manually:
+   set EMAIL_HOST_USER=3dprintxcontact@gmail.com
+   set EMAIL_HOST_PASSWORD=mugptymalyopurwb
+   python manage.py runserver
+
+5. Open frontend:
+   - Customer: http://127.0.0.1:8000/docs/customer/index.html
+   - Admin: http://127.0.0.1:8000/docs/admin/admin.html
+
+================================================================================
+                        SECURITY FEATURES
+================================================================================
+
+1. JWT Authentication: Secure token-based auth with refresh mechanism
+2. Password Hashing: Django's PBKDF2 algorithm
+3. CSRF Protection: Disabled for API (using JWT instead)
+4. SQL Injection: Protected by Django ORM
+5. XSS Protection: HTML escaping in templates
+6. Rate Limiting: 10 login attempts per minute per IP
+7. Admin Access: Requires is_superuser flag
+8. File Upload: Validates .stl extension
+9. Email Validation: Unique email constraint
+10. Phone Validation: Format checking (09XXXXXXXXX or +639XXXXXXXXX)
+
+================================================================================
+                        FUTURE ENHANCEMENTS
+================================================================================
+
+1. Payment gateway integration (real GCash/Maya API)
+2. Real-time order tracking with WebSockets
+3. Product image uploads (currently URL only)
+4. Advanced search with filters (price range, category)
+5. Wishlist functionality
+6. Order history export (PDF/CSV)
+7. Email verification on registration
+8. Two-factor authentication
+9. Product inventory alerts
+10. Customer support chat
+
+================================================================================
+                        TROUBLESHOOTING
+================================================================================
+
+ISSUE: "Failed to load reviews"
+FIX: Ensure ProductReview model exists and migrations are applied
+     python manage.py makemigrations
+     python manage.py migrate
+
+ISSUE: Emails not sending
+FIX: Check EMAIL_HOST_USER and EMAIL_HOST_PASSWORD are set
+     Use start_server.bat or set manually before running server
+
+ISSUE: 401 Unauthorized errors
+FIX: Check JWT tokens in localStorage
+     Clear localStorage and login again
+
+ISSUE: CORS errors
+FIX: Ensure CORS_ALLOWED_ORIGINS in settings.py includes frontend URL
+
+ISSUE: Admin login fails
+FIX: Create superuser: python manage.py createsuperuser
+     Ensure is_superuser=True in database
+
+ISSUE: File upload fails
+FIX: Check MEDIA_ROOT and MEDIA_URL in settings.py
+     Ensure /media/stl_files/ directory exists
+
+================================================================================
+                        END OF DOCUMENTATION
+================================================================================

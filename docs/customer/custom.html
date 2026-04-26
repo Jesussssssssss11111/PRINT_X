@@ -1,0 +1,769 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="icon" href="../favicon.ico" type="image/x-icon">
+  <title>Custom Order – Print X</title>
+  <link rel="stylesheet" href="../assets/css/style.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/STLLoader.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/OBJLoader.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/3MFLoader.js"></script>
+</head>
+<body>
+
+<nav class="navbar" id="main-navbar"></nav>
+<div id="toast-container" class="toast-container"></div>
+
+<div class="page-wrapper">
+  <div class="page-header">
+    <div class="container page-header-content">
+      <div class="section-label">PERSONALIZE</div>
+      <h1>Custom <span style="color:var(--red)">Order</span></h1>
+      <p>Upload your 3D model file and get an instant price estimate</p>
+    </div>
+  </div>
+
+  <section class="section">
+    <div class="container">
+      <div class="custom-layout">
+
+        <!-- FORM -->
+        <div class="custom-form-section">
+          <div class="card" id="upload-card">
+            <h3 style="font-family:var(--font-display);margin-bottom:1.5rem;font-size:1rem;letter-spacing:1px;">SUBMIT YOUR DESIGN</h3>
+
+            <!-- File Upload Zone -->
+            <div class="upload-zone" id="upload-zone" onclick="document.getElementById('file-input').click()">
+              <div class="upload-icon">⬡</div>
+              <div class="upload-text">
+                <strong>Drop your 3D files here</strong>
+                <p>or click to browse (up to 5 files)</p>
+              </div>
+              <div class="upload-formats">STL · OBJ · 3MF · AMF · STEP</div>
+              <input type="file" id="file-input" accept=".stl,.obj,.3mf,.amf,.step,.stp" multiple style="display:none" onchange="handleFileSelect(this)">
+            </div>
+
+            <!-- File List (shown after selection) -->
+            <div id="file-list" style="display:none;margin-top:1rem;">
+              <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.5rem;">
+                <strong style="font-size:0.85rem;">Selected Files (<span id="file-count">0</span>/5)</strong>
+                <div style="display:flex;gap:0.5rem;">
+                  <button onclick="deleteSelectedFiles()" class="btn-delete-selected" id="delete-selected-btn" style="display:none;">
+                    <span class="btn-icon">🗑️</span>
+                    <span>Delete Selected</span>
+                  </button>
+                  <button onclick="clearAllFiles()" class="btn btn-ghost btn-sm">Clear All</button>
+                </div>
+              </div>
+              <div id="files-container"></div>
+            </div>
+
+            <div class="form-group" style="margin-top:1.5rem;">
+              <label>Print Material</label>
+              <select class="form-control" id="material" onchange="updateEstimate()">
+                <option value="1">PLA – Standard (₱1.00/g)</option>
+                <option value="1.5">PETG – Durable (₱1.50/g)</option>
+                <option value="2">ABS – Heat Resistant (₱2.00/g)</option>
+                <option value="3">Resin – High Detail (₱3.00/g)</option>
+                <option value="2.5">TPU – Flexible (₱2.50/g)</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label>Print Quality</label>
+              <select class="form-control" id="quality" onchange="updateEstimate()">
+                <option value="1">Draft (0.3mm) – Fastest</option>
+                <option value="1.2" selected>Standard (0.2mm) – Balanced</option>
+                <option value="1.5">Fine (0.15mm) – Quality</option>
+                <option value="2">Ultra Fine (0.1mm) – Best</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label>Color Preference</label>
+              <input type="text" class="form-control" id="color" placeholder="e.g., Red, White, Black, Any">
+            </div>
+
+            <div class="form-group">
+              <label>Quantity</label>
+              <input type="number" class="form-control" id="quantity-input" value="1" min="1" max="100" onchange="updateEstimate()">
+            </div>
+
+            <div class="form-group">
+              <label>Description / Special Instructions</label>
+              <textarea class="form-control" id="description" rows="3" placeholder="Describe your project, any specific requirements, intended use..."></textarea>
+            </div>
+
+            <button class="btn btn-primary btn-full btn-lg" onclick="submitCustomOrder()" id="submit-btn">
+              Submit Custom Order
+            </button>
+          </div>
+        </div>
+
+        <!-- PREVIEW + ESTIMATE -->
+        <div class="custom-sidebar">
+          <!-- 3D Preview -->
+          <div class="card" style="margin-bottom:1.5rem;">
+            <h4 style="font-family:var(--font-display);font-size:0.85rem;letter-spacing:2px;color:var(--gray-text);margin-bottom:1rem;">3D PREVIEW</h4>
+            <div class="preview-canvas" id="preview-canvas">
+              <div class="preview-placeholder" id="preview-placeholder">
+                <div class="preview-icon">⬡</div>
+                <p>Upload a file to see preview</p>
+              </div>
+              <canvas id="model-canvas" style="display:none;width:100%;height:200px;"></canvas>
+            </div>
+          </div>
+
+          <!-- Price Estimate -->
+          <div class="card estimate-card" id="estimate-section">
+            <h4 style="font-family:var(--font-display);font-size:0.85rem;letter-spacing:2px;color:var(--gray-text);margin-bottom:1.2rem;">PRICE ESTIMATE</h4>
+            <div id="estimate-placeholder" style="text-align:center;color:var(--gray-text);padding:1rem;">
+              <p>Upload a file to see estimate</p>
+            </div>
+            <div id="estimate-details" style="display:none;">
+              <div class="estimate-row">
+                <span>Base Material Cost</span>
+                <span id="est-material">₱0.00</span>
+              </div>
+              <div class="estimate-row">
+                <span>Quality Multiplier</span>
+                <span id="est-quality">×1.0</span>
+              </div>
+              <div class="estimate-row">
+                <span>Quantity</span>
+                <span id="est-qty">×1</span>
+              </div>
+              <div class="estimate-row">
+                <span>Service Fee</span>
+                <span id="est-fee">₱50.00</span>
+              </div>
+              <div class="divider"></div>
+              <div class="estimate-total">
+                <span>Estimated Total</span>
+                <span id="est-total" style="color:var(--red);font-size:1.4rem;">₱0.00</span>
+              </div>
+              <p class="estimate-note">* Final price may vary based on actual model complexity and printing time.</p>
+            </div>
+          </div>
+
+          <!-- My Requests -->
+          <div class="card" style="margin-top:1.5rem;" id="my-requests-card">
+            <h4 style="font-family:var(--font-display);font-size:0.85rem;letter-spacing:2px;color:var(--gray-text);margin-bottom:1rem;">MY REQUESTS</h4>
+            <div id="my-requests-list">
+              <div class="loading-spinner" style="padding:1rem;"><div class="spinner"></div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+</div>
+
+<footer class="footer" id="footer"></footer>
+
+<script src="../assets/js/script.js"></script>
+<script>
+let selectedFiles = [];
+let selectedFileIndices = new Set();
+const MAX_FILES = 5;
+let estimatedPrice = 0;
+
+function handleFileSelect(input) {
+  if (!input.files || input.files.length === 0) return;
+  
+  const newFiles = Array.from(input.files);
+  const remainingSlots = MAX_FILES - selectedFiles.length;
+  
+  if (newFiles.length > remainingSlots) {
+    Toast.error(`You can only upload ${MAX_FILES} files maximum. ${remainingSlots} slots remaining.`);
+    return;
+  }
+  
+  selectedFiles.push(...newFiles);
+  renderFileList();
+  updateEstimate();
+  
+  // Reset input
+  input.value = '';
+}
+
+function renderFileList() {
+  const container = document.getElementById('files-container');
+  const fileList = document.getElementById('file-list');
+  const fileCount = document.getElementById('file-count');
+  const deleteBtn = document.getElementById('delete-selected-btn');
+  
+  if (selectedFiles.length === 0) {
+    fileList.style.display = 'none';
+    document.getElementById('upload-zone').style.borderColor = '';
+    document.getElementById('upload-zone').style.background = '';
+    document.getElementById('preview-placeholder').style.display = 'flex';
+    document.getElementById('model-canvas').style.display = 'none';
+    document.getElementById('estimate-placeholder').style.display = 'block';
+    document.getElementById('estimate-details').style.display = 'none';
+    selectedFileIndices.clear();
+    return;
+  }
+  
+  fileList.style.display = 'block';
+  fileCount.textContent = selectedFiles.length;
+  document.getElementById('upload-zone').style.borderColor = 'var(--red)';
+  document.getElementById('upload-zone').style.background = 'rgba(255,0,0,0.02)';
+  
+  // Show/hide delete button
+  deleteBtn.style.display = selectedFileIndices.size > 0 ? 'inline-block' : 'none';
+  
+  container.innerHTML = selectedFiles.map((file, index) => {
+    const size = (file.size / 1024).toFixed(1);
+    const isSelected = selectedFileIndices.has(index);
+    return `
+      <div class="file-info-box ${isSelected ? 'file-selected' : ''}" style="margin-bottom:0.5rem;cursor:pointer;" onclick="showModelPreview(selectedFiles[${index}])" title="Click to preview">
+        <input type="checkbox" ${isSelected ? 'checked' : ''} onclick="event.stopPropagation(); toggleFileSelection(${index})" style="cursor:pointer;">
+        <div class="file-icon">📄</div>
+        <div class="file-details">
+          <div class="file-name">${file.name}</div>
+          <div class="file-size">${size} KB</div>
+        </div>
+        <button onclick="event.stopPropagation(); removeFile(${index})" class="btn btn-ghost btn-sm">✕</button>
+      </div>
+    `;
+  }).join('');
+  
+  // Show preview of first file
+  if (selectedFiles.length > 0) {
+    showModelPreview(selectedFiles[0]);
+  }
+}
+
+function removeFile(index) {
+  selectedFiles.splice(index, 1);
+  selectedFileIndices.clear();
+  renderFileList();
+  updateEstimate();
+}
+
+function clearAllFiles() {
+  selectedFiles = [];
+  selectedFileIndices.clear();
+  document.getElementById('file-input').value = '';
+  renderFileList();
+}
+
+function toggleFileSelection(index) {
+  if (selectedFileIndices.has(index)) {
+    selectedFileIndices.delete(index);
+  } else {
+    selectedFileIndices.add(index);
+  }
+  renderFileList();
+}
+
+function deleteSelectedFiles() {
+  if (selectedFileIndices.size === 0) return;
+  
+  if (!confirm(`Delete ${selectedFileIndices.size} selected file(s)?`)) return;
+  
+  // Sort indices in descending order to avoid index shifting issues
+  const indicesToDelete = Array.from(selectedFileIndices).sort((a, b) => b - a);
+  
+  indicesToDelete.forEach(index => {
+    selectedFiles.splice(index, 1);
+  });
+  
+  selectedFileIndices.clear();
+  renderFileList();
+  updateEstimate();
+  
+  Toast.success('Selected files deleted.');
+}
+
+function clearFile() {
+  clearAllFiles();
+}
+
+async function showModelPreview(file) {
+  const canvas = document.getElementById('model-canvas');
+  const placeholder = document.getElementById('preview-placeholder');
+  placeholder.style.display = 'none';
+  canvas.style.display = 'block';
+
+  if (window._previewAnim) cancelAnimationFrame(window._previewAnim);
+  if (window._threeViewer) {
+    window._threeViewer.dispose();
+  }
+
+  const viewer = {
+    scene: new THREE.Scene(),
+    camera: new THREE.PerspectiveCamera(75, canvas.offsetWidth / 200, 0.1, 1000),
+    renderer: new THREE.WebGLRenderer({ canvas: canvas, alpha: true, antialias: true }),
+    controls: null,
+    
+    init: function() {
+      this.renderer.setSize(canvas.offsetWidth, 200);
+      this.camera.position.set(50, 50, 50);
+      this.scene.background = null;
+
+      const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
+      this.scene.add(ambientLight);
+      const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
+      directionalLight.position.set(1, 1, 1);
+      this.scene.add(directionalLight);
+
+      this.controls = new THREE.OrbitControls(this.camera, this.renderer.domElement);
+      this.controls.enableDamping = true;
+      this.controls.dampingFactor = 0.1;
+      this.controls.screenSpacePanning = false;
+      this.controls.minDistance = 10;
+      this.controls.maxDistance = 500;
+
+      this.animate();
+    },
+
+    loadFile: function(file) {
+      const reader = new FileReader();
+      const extension = file.name.split('.').pop().toLowerCase();
+      let loader;
+
+      if (extension === 'stl') {
+        loader = new THREE.STLLoader();
+      } else if (extension === 'obj') {
+        loader = new THREE.OBJLoader();
+      } else if (extension === '3mf') {
+        loader = new THREE.ThreeMFLoader();
+      } else {
+        Toast.error("Unsupported file type for preview.");
+        placeholder.style.display = 'flex';
+        canvas.style.display = 'none';
+        return;
+      }
+      
+      reader.onload = (e) => {
+        try {
+          const content = e.target.result;
+          const geometryOrObject = loader.parse(content);
+          
+          let mesh;
+          if (geometryOrObject instanceof THREE.BufferGeometry) {
+            geometryOrObject.center();
+            const material = new THREE.MeshStandardMaterial({ color: 0xff0000, metalness: 0.1, roughness: 0.5 });
+            mesh = new THREE.Mesh(geometryOrObject, material);
+          } else {
+            mesh = geometryOrObject;
+            new THREE.Box3().setFromObject(mesh).getCenter(mesh.position).multiplyScalar(-1);
+            mesh.traverse(function (child) {
+              if (child instanceof THREE.Mesh) {
+                child.material = new THREE.MeshStandardMaterial({ color: 0xff0000, metalness: 0.1, roughness: 0.5 });
+              }
+            });
+          }
+          
+          const box = new THREE.Box3().setFromObject(mesh);
+          const size = box.getSize(new THREE.Vector3());
+          const center = box.getCenter(new THREE.Vector3());
+          
+          const maxDim = Math.max(size.x, size.y, size.z);
+          const fov = this.camera.fov * (Math.PI / 180);
+          let cameraZ = Math.abs(maxDim / 2 / Math.tan(fov / 2));
+          cameraZ *= 1.5;
+          
+          this.camera.position.set(center.x, center.y, center.z + cameraZ);
+          this.controls.target.copy(center);
+          this.controls.update();
+
+          if (this.scene.children.length > 2) {
+             this.scene.remove(this.scene.children[2]);
+          }
+          this.scene.add(mesh);
+        } catch (error) {
+          console.error("Error loading model:", error);
+          placeholder.style.display = 'flex';
+          canvas.style.display = 'none';
+          Toast.error("Could not preview this file type.");
+        }
+      };
+
+      if (extension === 'stl' || extension === '3mf') {
+        reader.readAsArrayBuffer(file);
+      } else {
+        reader.readAsText(file);
+      }
+    },
+
+    animate: function() {
+      window._previewAnim = requestAnimationFrame(this.animate.bind(this));
+      this.controls.update();
+      this.renderer.render(this.scene, this.camera);
+    },
+
+    dispose: function() {
+      this.renderer.dispose();
+      this.controls.dispose();
+    }
+  };
+
+  window._threeViewer = viewer;
+  viewer.init();
+  if (file) {
+    viewer.loadFile(file);
+  }
+}
+
+function updateEstimate() {
+  if (selectedFiles.length === 0) {
+    document.getElementById('estimate-placeholder').style.display = 'block';
+    document.getElementById('estimate-details').style.display = 'none';
+    return;
+  }
+  
+  const materialRate = parseFloat(document.getElementById('material').value);
+  const qualityMult = parseFloat(document.getElementById('quality').value);
+  const qty = parseInt(document.getElementById('quantity-input').value) || 1;
+  const SERVICE_FEE = 50;
+
+  // Calculate total for all files
+  let totalMaterialCost = 0;
+  selectedFiles.forEach(file => {
+    const sizeKb = file.size / 1024;
+    const grams = Math.max(5, sizeKb * 0.15);
+    totalMaterialCost += grams * materialRate;
+  });
+  
+  const unitCost = totalMaterialCost * qualityMult;
+  const total = (unitCost * qty) + SERVICE_FEE;
+  estimatedPrice = Math.round(total * 100) / 100;
+
+  document.getElementById('estimate-placeholder').style.display = 'none';
+  document.getElementById('estimate-details').style.display = 'block';
+  document.getElementById('est-material').textContent = formatPrice(totalMaterialCost);
+  document.getElementById('est-quality').textContent = `×${qualityMult}`;
+  document.getElementById('est-qty').textContent = `×${qty}`;
+  document.getElementById('est-fee').textContent = formatPrice(SERVICE_FEE);
+  document.getElementById('est-total').textContent = formatPrice(estimatedPrice);
+}
+
+async function submitCustomOrder() {
+  if (!requireLogin()) return;
+  if (selectedFiles.length === 0) { 
+    Toast.error('Please select at least one file'); 
+    return; 
+  }
+
+  const btn = document.getElementById('submit-btn');
+  btn.disabled = true; 
+  btn.textContent = 'Uploading...';
+
+  try {
+    const materialEl = document.getElementById('material');
+    const colorEl = document.getElementById('color');
+    const quantityInput = document.getElementById('quantity-input');
+    const description = document.getElementById('description').value || '';
+    
+    // Submit each file as a separate custom request
+    let successCount = 0;
+    let failCount = 0;
+    
+    for (let i = 0; i < selectedFiles.length; i++) {
+      const file = selectedFiles[i];
+      btn.textContent = `Uploading ${i + 1}/${selectedFiles.length}...`;
+      
+      const formData = new FormData();
+      formData.append('stl_file', file);
+      formData.append('file_name', file.name);
+      formData.append('file_size', (file.size / 1024).toFixed(2));
+      formData.append('notes', description);
+      
+      if (materialEl) formData.append('material', materialEl.options[materialEl.selectedIndex].text);
+      if (colorEl) formData.append('color', colorEl.value);
+      if (quantityInput) formData.append('quantity', quantityInput.value);
+
+      const { ok } = await apiFetch('/custom/', {
+        method: 'POST',
+        body: formData
+      }, true);
+
+      if (ok) {
+        successCount++;
+      } else {
+        failCount++;
+      }
+    }
+    
+    if (successCount > 0) {
+      Toast.success(`${successCount} file(s) uploaded successfully!`);
+      clearAllFiles();
+      loadMyRequests();
+    }
+    
+    if (failCount > 0) {
+      Toast.error(`${failCount} file(s) failed to upload.`);
+    }
+  } catch (err) {
+    Toast.error('Network error. Is the server running?');
+  } finally {
+    btn.disabled = false; 
+    btn.textContent = 'Submit Custom Order';
+  }
+}
+
+async function loadMyRequests() {
+  if (!Auth.isLoggedIn()) {
+    document.getElementById('my-requests-list').innerHTML = `<p style="font-size:0.85rem;color:var(--gray-text)">Login to view your requests.</p>`;
+    return;
+  }
+  const { ok, data } = await apiFetch('/custom/');
+  if (!ok || !data.requests || data.requests.length === 0) {
+    document.getElementById('my-requests-list').innerHTML = `<p style="font-size:0.85rem;color:var(--gray-text)">No custom orders yet.</p>`;
+    return;
+  }
+  document.getElementById('my-requests-list').innerHTML = data.requests.slice(0, 5).map(r => `
+    <div class="request-item">
+      <div class="request-info">
+        <div class="request-name">${r.file_name}</div>
+        <div class="request-meta">${formatDate(r.created_at)} · ${formatPrice(r.estimated_price)}</div>
+      </div>
+      <div style="display:flex;align-items:center;gap:0.5rem;">
+        ${statusBadge(r.status)}
+        ${['pending', 'reviewing'].includes(r.status.toLowerCase())
+          ? `<button class="btn btn-danger" style="font-size:0.7rem;padding:0.2rem 0.5rem;" onclick="cancelRequest(${r.id})">Cancel</button>`
+          : ''}
+      </div>
+    </div>
+  `).join('');
+}
+
+async function cancelRequest(id) {
+  document.getElementById('customCancelId').value = id;
+  document.getElementById('customCancelReason').value = '';
+  document.getElementById('customCancelModal').classList.remove('hidden');
+}
+
+async function confirmCancel() {
+  const id     = document.getElementById('customCancelId').value;
+  const reason = document.getElementById('customCancelReason').value.trim();
+  if (!reason) { Toast.error('Please provide a cancellation reason.'); return; }
+  document.getElementById('customCancelModal').classList.add('hidden');
+  const { ok, data } = await apiFetch(`/custom/cancel/${id}/`, {
+    method: 'POST',
+    body: JSON.stringify({ reason }),
+  });
+  if (ok) { Toast.info('Request cancelled.'); loadMyRequests(); }
+  else Toast.error((data && data.error) || 'Failed to cancel.');
+}
+
+// Drag & Drop
+const zone = document.getElementById('upload-zone');
+zone.addEventListener('dragover', (e) => { e.preventDefault(); zone.classList.add('drag-over'); });
+zone.addEventListener('dragleave', () => zone.classList.remove('drag-over'));
+zone.addEventListener('drop', (e) => {
+  e.preventDefault(); 
+  zone.classList.remove('drag-over');
+  
+  const files = Array.from(e.dataTransfer.files);
+  const remainingSlots = MAX_FILES - selectedFiles.length;
+  
+  if (files.length > remainingSlots) {
+    Toast.error(`You can only upload ${MAX_FILES} files maximum. ${remainingSlots} slots remaining.`);
+    return;
+  }
+  
+  selectedFiles.push(...files);
+  renderFileList();
+  updateEstimate();
+});
+
+document.addEventListener('DOMContentLoaded', loadMyRequests);
+</script>
+
+<style>
+.custom-sidebar {
+  position: sticky;
+  top: 2rem;
+}
+.custom-layout {
+  display: grid;
+  grid-template-columns: 1fr 340px;
+  gap: 2rem;
+  align-items: start;
+}
+.upload-zone {
+  border: 2px dashed var(--gray-mid);
+  border-radius: var(--radius-lg);
+  padding: 2rem;
+  text-align: center;
+  cursor: pointer;
+  transition: var(--transition);
+  background: var(--gray-light);
+}
+.upload-zone:hover, .upload-zone.drag-over {
+  border-color: var(--red);
+  background: rgba(255,0,0,0.03);
+}
+.upload-icon { font-size: 2.5rem; color: var(--red); margin-bottom: 0.5rem; }
+.upload-text strong { font-family: var(--font-display); font-size: 0.95rem; }
+.upload-text p { color: var(--gray-text); font-size: 0.85rem; margin: 0.2rem 0 0.75rem; }
+.upload-formats { font-family: var(--font-mono); font-size: 0.7rem; letter-spacing: 2px; color: var(--gray-text); }
+.file-info-box {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.8rem 1rem;
+  background: var(--gray-light);
+  border-radius: var(--radius);
+  border: 1px solid var(--gray-mid);
+  margin-top: 0.75rem;
+  transition: all var(--transition);
+}
+.file-info-box:hover {
+  background: var(--off-white);
+  border-color: var(--red);
+  transform: translateX(2px);
+}
+.file-info-box.file-selected {
+  background: #fef3c7;
+  border-color: #fbbf24;
+}
+
+.btn-delete-selected {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  background: linear-gradient(135deg, #dc2626 0%, #991b1b 100%);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 2px 8px rgba(220, 38, 38, 0.3);
+  position: relative;
+  overflow: hidden;
+}
+
+.btn-delete-selected::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+  transition: left 0.5s;
+}
+
+.btn-delete-selected:hover::before {
+  left: 100%;
+}
+
+.btn-delete-selected:hover {
+  background: linear-gradient(135deg, #b91c1c 0%, #7f1d1d 100%);
+  box-shadow: 0 4px 16px rgba(220, 38, 38, 0.5);
+  transform: translateY(-2px);
+}
+
+.btn-delete-selected:active {
+  transform: translateY(0);
+  box-shadow: 0 2px 8px rgba(220, 38, 38, 0.3);
+}
+
+.btn-delete-selected .btn-icon {
+  font-size: 1.1rem;
+  animation: shake 2s infinite;
+}
+
+@keyframes shake {
+  0%, 100% { transform: rotate(0deg); }
+  10%, 30%, 50%, 70%, 90% { transform: rotate(-5deg); }
+  20%, 40%, 60%, 80% { transform: rotate(5deg); }
+}
+.file-icon { font-size: 1.5rem; }
+.file-details { flex: 1; }
+.file-name { font-family: var(--font-mono); font-size: 0.85rem; font-weight: 600; word-break: break-all; }
+.file-size { font-size: 0.8rem; color: var(--gray-text); }
+.preview-canvas {
+  background: var(--gray-light);
+  border-radius: var(--radius);
+  height: 200px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+.preview-placeholder {
+  text-align: center;
+  color: var(--gray-text);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+}
+.preview-icon { font-size: 2rem; opacity: 0.4; }
+.preview-placeholder p { font-size: 0.8rem; }
+.estimate-row {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.88rem;
+  color: var(--gray-text);
+  padding: 0.3rem 0;
+}
+.estimate-total {
+  display: flex;
+  justify-content: space-between;
+  font-family: var(--font-display);
+  font-weight: 800;
+}
+.estimate-note { font-size: 0.75rem; color: var(--gray-text); margin-top: 0.75rem; }
+.request-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.75rem 0;
+  border-bottom: 1px solid var(--gray-light);
+  gap: 0.5rem;
+}
+.request-item:last-child { border-bottom: none; }
+.request-info {
+  min-width: 0; /* Allow flex item to shrink, preventing overflow of long text */
+}
+.request-name {
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+  font-weight: 600;
+  white-space: nowrap; /* Keep the long text on a single line */
+  overflow-x: auto;   /* Add a horizontal scrollbar if the text is too long */
+  padding-bottom: 5px;/* Add a little space to accommodate the scrollbar */
+}
+.request-meta { font-size: 0.75rem; color: var(--gray-text); }
+@media (max-width: 900px) {
+  .custom-layout { grid-template-columns: 1fr; }
+}
+@media (max-width: 480px) {
+  .upload-zone { padding: 1.2rem; }
+}
+</style>
+
+
+<!-- Cancel Custom Request Modal -->
+<div class="modal-overlay hidden" id="customCancelModal">
+  <div class="modal" style="max-width:440px">
+    <div class="modal-title">
+      Cancel Request
+      <button class="modal-close" onclick="document.getElementById('customCancelModal').classList.add('hidden')">✕</button>
+    </div>
+    <input type="hidden" id="customCancelId">
+    <div class="form-group">
+      <label>Reason for Cancellation <span style="color:var(--red)">*</span></label>
+      <textarea class="form-control" id="customCancelReason" rows="3" placeholder="Why are you cancelling this request?"></textarea>
+    </div>
+    <div style="display:flex;gap:12px">
+      <button class="btn btn-primary" style="flex:1" onclick="confirmCancel()">Confirm Cancel</button>
+      <button class="btn btn-outline" style="flex:1" onclick="document.getElementById('customCancelModal').classList.add('hidden')">Go Back</button>
+    </div>
+  </div>
+</div>
+</body>
+</html>

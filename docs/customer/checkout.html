@@ -1,0 +1,615 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="icon" href="../favicon.ico" type="image/x-icon">
+  <title>Checkout – Print X</title>
+  <link rel="stylesheet" href="../assets/css/style.css" />
+  <style>
+    /* ── Step Indicator ──────────────────────── */
+    .step-indicator {
+      display: flex;
+      align-items: center;
+      margin-bottom: 36px;
+      overflow-x: auto;
+      padding-bottom: 4px;
+    }
+
+    .step-ind {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-shrink: 0;
+    }
+
+    .step-ind-num {
+      width: 34px;
+      height: 34px;
+      border-radius: 50%;
+      background: var(--gray-mid);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      font-size: 0.82rem;
+      color: var(--gray-text);
+      flex-shrink: 0;
+    }
+
+    .step-ind.active .step-ind-num {
+      background: var(--red);
+      color: white;
+      box-shadow: 0 0 16px rgba(232,0,13,0.35);
+    }
+
+    .step-ind.done .step-ind-num {
+      background: #22c55e;
+      color: white;
+    }
+
+    .step-ind-label {
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: var(--gray-text);
+      white-space: nowrap;
+    }
+
+    .step-ind.active .step-ind-label { color: var(--dark); }
+    .step-ind.done  .step-ind-label  { color: #16a34a; }
+
+    .step-connector {
+      flex: 1;
+      min-width: 24px;
+      height: 2px;
+      background: var(--gray-mid);
+      margin: 0 10px;
+    }
+
+    /* ── Checkout Layout ─────────────────────── */
+    .checkout-layout {
+      display: grid;
+      grid-template-columns: 1fr 360px;
+      gap: 28px;
+      align-items: start;
+    }
+
+    /* ── Payment Containers ──────────────────── */
+    .payment-container {
+      display: none;
+      margin-top: 16px;
+      border-radius: var(--radius-lg);
+      overflow: hidden;
+      border: 1px solid var(--gray-mid);
+    }
+
+    .payment-header {
+      padding: 20px 24px;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+
+    .payment-body {
+      padding: 16px 24px 20px;
+      background: var(--off-white);
+    }
+
+    .payment-qr-wrap {
+      text-align: center;
+      padding: 8px 0 12px;
+    }
+
+    .gcash-header  { background: #00b14f; }
+    .maya-header   { background: #00d4aa; }
+    .bank-header   { background: #1e3a5f; }
+
+    .payment-header .pay-icon { font-size: 2rem; }
+    .payment-header .pay-title { color: white; font-weight: 700; font-family: var(--font-display); font-size: 0.95rem; }
+    .payment-header .pay-amount { color: rgba(255,255,255,0.9); font-size: 0.85rem; margin-top: 2px; }
+
+    .bank-detail-row {
+      display: flex;
+      justify-content: space-between;
+      padding: 8px 0;
+      border-bottom: 1px solid var(--gray-mid);
+      font-size: 0.85rem;
+    }
+
+    .bank-detail-row:last-child { border-bottom: none; }
+    .bank-detail-row .lbl  { color: var(--gray-text); }
+    .bank-detail-row .val  { font-family: var(--font-mono); font-weight: 600; }
+    .bank-detail-row .val.red { color: var(--red); }
+
+    /* ── Order Summary card ──────────────────── */
+    .summary-sticky {
+      position: sticky;
+      top: calc(var(--nav-height) + 20px);
+    }
+
+    .order-item-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      padding: 11px 0;
+      border-bottom: 1px solid var(--gray-mid);
+      font-size: 0.87rem;
+      gap: 12px;
+    }
+
+    .order-item-row:last-child { border-bottom: none; }
+    .order-item-name { font-weight: 600; }
+    .order-item-sub  { color: var(--gray-text); font-size: 0.78rem; margin-top: 2px; }
+    .order-item-price { font-weight: 700; white-space: nowrap; }
+
+    .summary-total-row {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.87rem;
+      margin-bottom: 8px;
+    }
+
+    .summary-total-row.big {
+      font-family: var(--font-display);
+      font-weight: 700;
+      font-size: 1rem;
+    }
+
+    .summary-total-row.big span:last-child { color: var(--red); }
+
+    /* ── Success Screen ──────────────────────── */
+    .success-box {
+      text-align: center;
+      padding: 56px 32px;
+      max-width: 560px;
+      margin: 0 auto;
+    }
+
+    .success-icon {
+      width: 96px;
+      height: 96px;
+      background: #d1fae5;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 2.4rem;
+      margin: 0 auto 24px;
+      animation: successPop 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+
+    @keyframes successPop {
+      from { transform: scale(0); opacity: 0; }
+      to   { transform: scale(1); opacity: 1; }
+    }
+
+    .order-ref {
+      font-family: var(--font-mono);
+      background: var(--gray-light);
+      padding: 8px 22px;
+      border-radius: var(--radius);
+      font-size: 0.9rem;
+      display: inline-block;
+      margin-bottom: 28px;
+      border: 1px solid var(--gray-mid);
+    }
+
+    /* ── Ref number tip box ──────────────────── */
+    .ref-tip {
+      font-size: 0.77rem;
+      color: var(--gray-text);
+      margin-top: 6px;
+      line-height: 1.55;
+    }
+
+    /* ── Name row ───────────────────────────── */
+    .name-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+    }
+
+    /* ── Responsive ──────────────────────────── */
+    @media (max-width: 860px) {
+      .checkout-layout { 
+        grid-template-columns: 1fr; 
+        /* Show summary first on mobile */
+        direction: ltr;
+      }
+      .summary-sticky  { 
+        position: static; 
+        order: -1; /* Move summary to top on mobile */
+      }
+      .checkout-layout > div:first-child {
+        order: 1; /* Move form below summary on mobile */
+      }
+    }
+
+    @media (max-width: 480px) {
+      .name-row { grid-template-columns: 1fr; }
+      .step-ind-label { display: none; }
+      .success-box { padding: 40px 16px; }
+    }
+  </style>
+</head>
+<body>
+  <header class="navbar" id="navbar"></header>
+
+  <div class="page-header">
+    <div class="container">
+      <h1>Checkout</h1>
+      <p>Complete your order below</p>
+    </div>
+  </div>
+
+  <section class="section">
+    <div class="container">
+      <div id="checkoutContent">
+        <div class="loading-wrap">
+          <div class="spinner"></div>
+          <span>Loading checkout…</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <footer class="footer" id="footer"></footer>
+  <div class="toast-container"></div>
+
+  <script src="../assets/js/script.js"></script>
+  <script>
+    let cartItems = [];
+    let customRequests = [];
+    let cartTotal = 0;
+    let orderRef  = 'PRINTX' + Date.now();
+    let checkoutInterval;
+
+    /* ── Init ──────────────────────────────────── */
+    async function initCheckout() {
+      if (!requireAuth()) return;
+      await loadCheckoutData();
+      renderCheckout();
+
+      // Poll for updates every 10 seconds
+      if (checkoutInterval) clearInterval(checkoutInterval);
+      checkoutInterval = setInterval(loadCheckoutData, 10000);
+    }
+
+    /* ── Load Data ─────────────────────────────── */
+    async function loadCheckoutData() {
+      const res = await apiFetch('/cart/');
+      const content = document.getElementById('checkoutContent');
+
+      // Get selected items from sessionStorage
+      const selectedCartIds = JSON.parse(sessionStorage.getItem('selectedCartItems') || '[]');
+      const selectedCustomIds = JSON.parse(sessionStorage.getItem('selectedCustomItems') || '[]');
+
+      const allCartItems = res.data.cart || [];
+      const allCustomRequests = res.data.custom_requests || [];
+
+      // Filter only selected items
+      const newCartItems = allCartItems.filter(item => selectedCartIds.includes(item.id));
+      const newCustomRequests = allCustomRequests.filter(req => selectedCustomIds.includes(req.id));
+
+      if (newCartItems.length === 0 && newCustomRequests.length === 0) {
+        content.innerHTML = '<div class="empty-state"><div class="icon">🛒</div><h3>Nothing to Checkout</h3><p>No items selected for checkout.</p><a href="cart.html" class="btn btn-primary mt-16">← Back to Cart</a></div>';
+        if (checkoutInterval) {
+          clearInterval(checkoutInterval);
+          checkoutInterval = null;
+        }
+        return;
+      }
+
+      // Check if data has changed before re-rendering
+      if (JSON.stringify(cartItems) !== JSON.stringify(newCartItems) || JSON.stringify(customRequests) !== JSON.stringify(newCustomRequests)) {
+        cartItems = newCartItems;
+        customRequests = newCustomRequests;
+        
+        // Calculate total for selected items only
+        cartTotal = cartItems.reduce((sum, item) => sum + parseFloat(item.subtotal || 0), 0) +
+                    customRequests.reduce((sum, req) => sum + ((req.estimated_price || 0) * req.quantity), 0);
+        
+        renderCheckout();
+        Toast.success('Your checkout has been updated.');
+      }
+    }
+
+    /* ── Render Checkout Form ───────────────────── */
+    function renderCheckout() {
+      const content = document.getElementById('checkoutContent');
+      const user    = Auth.getUser() || {};
+      
+      // Try to get phone from profile
+      let userPhone = '';
+      try {
+        const profile = JSON.parse(localStorage.getItem('px_profile') || '{}');
+        userPhone = profile.phone || '';
+      } catch (e) {
+        // Ignore error
+      }
+
+      const itemsHtml = cartItems.map(function(item) {
+        return '<div class="order-item-row">' +
+          '<div>' +
+            '<div class="order-item-name">' + (item.product && item.product.name || 'Item') + '</div>' +
+            '<div class="order-item-sub">×' + item.quantity + ' @ ' + formatPrice(item.product && item.product.price || 0) + '</div>' +
+          '</div>' +
+          '<div class="order-item-price">' + formatPrice(item.subtotal || 0) + '</div>' +
+        '</div>';
+      }).join('');
+
+      const customItemsHtml = customRequests.map(function(req) {
+        return '<div class="order-item-row">' +
+          '<div>' +
+            '<div class="order-item-name">Custom: ' + req.file_name + '</div>' +
+            '<div class="order-item-sub">×' + req.quantity + ' @ ' + formatPrice(req.estimated_price || 0) + '</div>' +
+          '</div>' +
+          '<div class="order-item-price">' + formatPrice((req.estimated_price || 0) * req.quantity) + '</div>' +
+        '</div>';
+      }).join('');
+
+      const noCustomItemsMessage = customRequests.length === 0 ? '<p style="font-size:0.8rem;color:var(--gray-text);text-align:center;padding:10px 0;">No approved custom requests.</p>' : '';
+
+      content.innerHTML =
+        /* Step Indicator */
+        '<div class="step-indicator">' +
+          '<div class="step-ind done"><div class="step-ind-num">✓</div><div class="step-ind-label">Cart</div></div>' +
+          '<div class="step-connector"></div>' +
+          '<div class="step-ind active"><div class="step-ind-num">2</div><div class="step-ind-label">Checkout</div></div>' +
+          '<div class="step-connector"></div>' +
+          '<div class="step-ind"><div class="step-ind-num">3</div><div class="step-ind-label">Confirmation</div></div>' +
+        '</div>' +
+
+        '<div class="checkout-layout">' +
+
+          /* ── LEFT: Delivery + Payment ── */
+          '<div class="card">' +
+            '<h3 style="font-family:var(--font-display);margin-bottom:22px;font-size:1rem">Delivery Information</h3>' +
+
+            '<div class="name-row">' +
+              '<div class="form-group"><label>First Name</label><input type="text" class="form-control" id="firstName" value="' + (user.first_name || '') + '" placeholder="Juan"></div>' +
+              '<div class="form-group"><label>Last Name</label><input type="text" class="form-control" id="lastName" value="' + (user.last_name || '') + '" placeholder="dela Cruz"></div>' +
+            '</div>' +
+
+            '<div class="form-group"><label>Email Address</label><input type="email" class="form-control" id="email" value="' + (user.email || '') + '" placeholder="juan@email.com"></div>' +
+            '<div class="form-group">' +
+              '<label>Phone Number <span style="color:var(--red)">*</span></label>' +
+              '<input type="tel" class="form-control" id="phone" value="' + userPhone + '" placeholder="+63 912 345 6789 or 09123456789" required>' +
+              '<p class="ref-tip">📞 Philippine mobile number for delivery coordination</p>' +
+            '</div>' +
+
+            '<div class="form-group">' +
+              '<label>Full Delivery Address <span style="color:var(--red)">*</span></label>' +
+              '<textarea class="form-control" id="address" rows="3" placeholder="House/Unit No., Street, Barangay, City/Municipality, Province, ZIP Code"></textarea>' +
+            '</div>' +
+
+            '<div class="form-group">' +
+              '<label>Payment Method</label>' +
+              '<select class="form-control" id="payment" onchange="togglePaymentOptions()">' +
+                '<option value="gcash">GCash</option>' +
+                '<option value="maya">Maya (PayMaya)</option>' +
+                '<option value="bank">Bank Transfer (BPI)</option>' +
+              '</select>' +
+
+              /* GCash */
+              '<div id="gcash-container" class="payment-container">' +
+                '<div class="payment-header gcash-header">' +
+                  '<div class="pay-icon">💚</div>' +
+                  '<div><div class="pay-title">GCash</div><div class="pay-amount">Scan QR to pay ₱<span id="gcash-amount">0.00</span></div></div>' +
+                '</div>' +
+                '<div class="payment-body">' +
+                  '<div class="payment-qr-wrap"><img src="img/qr.jpg" alt="GCash QR Code" class="payment-qr"></div>' +
+                  '<p style="text-align:center;font-size:0.8rem;color:var(--gray-text)">Reference: <strong id="gcash-ref"></strong></p>' +
+                '</div>' +
+              '</div>' +
+
+              /* Maya */
+              '<div id="maya-container" class="payment-container">' +
+                '<div class="payment-header maya-header">' +
+                  '<div class="pay-icon">💙</div>' +
+                  '<div><div class="pay-title">Maya (PayMaya)</div><div class="pay-amount">Pay ₱<span id="maya-amount">0.00</span></div></div>' +
+                '</div>' +
+                '<div class="payment-body">' +
+                  '<div style="text-align:center">' +
+                    '<button onclick="copyText(document.getElementById(\'maya-link\').textContent)" class="btn btn-primary btn-sm" style="margin-bottom:10px">Copy Payment Link</button>' +
+                    '<div id="maya-link" style="font-size:0.78rem;color:var(--gray-text);word-break:break-all">maya.com/pay?amount=0</div>' +
+                  '</div>' +
+                '</div>' +
+              '</div>' +
+
+              /* Bank */
+              '<div id="bank-container" class="payment-container">' +
+                '<div class="payment-header bank-header">' +
+                  '<div class="pay-icon">🏦</div>' +
+                  '<div><div class="pay-title">BPI Bank Transfer</div><div class="pay-amount">Transfer ₱<span id="bank-amount">0.00</span></div></div>' +
+                '</div>' +
+                '<div class="payment-body">' +
+                  '<div class="bank-detail-row"><span class="lbl">Account Number</span><span class="val">1234-5678-90</span></div>' +
+                  '<div class="bank-detail-row"><span class="lbl">Account Name</span><span class="val">Print X Trading</span></div>' +
+                  '<div class="bank-detail-row"><span class="lbl">Reference</span><span class="val red" id="bank-ref"></span></div>' +
+                  '<div class="bank-detail-row"><span class="lbl">Amount</span><span class="val red">₱<span id="bank-amount2">0.00</span></span></div>' +
+                  '<button onclick="copyBankDetails()" class="btn btn-primary btn-sm btn-full mt-12">Copy Bank Details</button>' +
+                '</div>' +
+              '</div>' +
+            '</div>' +
+
+            '<div class="form-group">' +
+              '<label>Payment Reference Number <span style="color:var(--red)">*</span></label>' +
+              '<input type="text" class="form-control" id="refNumber" placeholder="e.g. GCash ref: 1234567890 or bank transaction ID" style="font-family:var(--font-mono)">' +
+              '<p class="ref-tip">📋 Enter the reference/transaction number from your payment receipt so we can verify your payment quickly.</p>' +
+            '</div>' +
+
+            '<div class="form-group">' +
+              '<label>Order Notes <span style="color:var(--gray-text);font-weight:400">(Optional)</span></label>' +
+              '<textarea class="form-control" id="notes" rows="2" placeholder="Any special instructions…"></textarea>' +
+            '</div>' +
+
+            '<button class="btn btn-primary btn-full" style="font-size:1rem;padding:15px" id="placeOrderBtn" onclick="placeOrder()">✓ Place Order</button>' +
+            '<a href="cart.html" class="btn btn-outline btn-full mt-12" style="text-align:center">← Back to Cart</a>' +
+          '</div>' +
+
+          /* ── RIGHT: Summary ── */
+          '<div class="summary-sticky">' +
+            '<div class="card">' +
+              '<h3 style="font-family:var(--font-display);font-size:0.95rem;margin-bottom:18px">Order Summary</h3>' +
+              itemsHtml +
+              customItemsHtml +
+              noCustomItemsMessage +
+              '<div class="divider"></div>' +
+              '<div class="summary-total-row"><span>Subtotal</span><span>' + formatPrice(cartTotal) + '</span></div>' +
+              '<div class="summary-total-row"><span>Shipping</span><span style="color:#16a34a;font-weight:600">FREE</span></div>' +
+              '<div class="divider" style="margin:8px 0"></div>' +
+              '<div class="summary-total-row big"><span>Total</span><span>' + formatPrice(cartTotal) + '</span></div>' +
+              '<div class="divider" style="margin:10px 0 6px"></div>' +
+              '<div class="summary-total-row" style="color:var(--red);font-weight:600"><span>60% Online Payment</span><span>' + formatPrice(cartTotal * 0.6) + '</span></div>' +
+              '<div class="summary-total-row text-gray"><span>40% Upon Delivery (COD)</span><span>' + formatPrice(cartTotal * 0.4) + '</span></div>' +
+              '<p style="font-size:0.75rem;color:var(--gray-text);margin-top:8px;line-height:1.5">Pay 60% now via your chosen method. The remaining 40% is collected on delivery.</p>' +
+            '</div>' +
+          '</div>' +
+
+        '</div>';
+
+      /* Trigger first payment option display */
+      togglePaymentOptions();
+    }
+
+    /* ── Toggle Payment UI ──────────────────────── */
+    function togglePaymentOptions() {
+      const payment    = document.getElementById('payment').value;
+      const onlineAmt  = (cartTotal * 0.6).toFixed(2);
+
+      document.querySelectorAll('.payment-container').forEach(function(c) { c.style.display = 'none'; });
+
+      if (payment === 'gcash') {
+        var el = document.getElementById('gcash-container');
+        el.style.display = 'block';
+        document.getElementById('gcash-amount').textContent = onlineAmt;
+        document.getElementById('gcash-ref').textContent    = orderRef;
+      } else if (payment === 'maya') {
+        var el = document.getElementById('maya-container');
+        el.style.display = 'block';
+        document.getElementById('maya-amount').textContent = onlineAmt;
+        document.getElementById('maya-link').textContent   = 'maya.com/pay?amount=' + onlineAmt + '&ref=' + orderRef;
+      } else if (payment === 'bank') {
+        var el = document.getElementById('bank-container');
+        el.style.display = 'block';
+        document.getElementById('bank-amount').textContent  = onlineAmt;
+        document.getElementById('bank-amount2').textContent = onlineAmt;
+        document.getElementById('bank-ref').textContent     = orderRef;
+      }
+    }
+
+    /* ── Helpers ────────────────────────────────── */
+    function copyText(text) {
+      navigator.clipboard.writeText(text).then(function() {
+        Toast.success('Copied to clipboard!');
+      }).catch(function() {
+        Toast.info('Copy manually: ' + text);
+      });
+    }
+
+    function copyBankDetails() {
+      var details = 'BPI Account: 1234-5678-90\nPrint X Trading\nAmount: \u20b1' + (cartTotal * 0.6).toFixed(2) + '\nRef: ' + orderRef;
+      copyText(details);
+    }
+
+    /* ── Place Order ────────────────────────────── */
+    async function placeOrder() {
+      var address   = document.getElementById('address').value.trim();
+      var phone     = document.getElementById('phone').value.trim();
+      var payment   = document.getElementById('payment').value;
+      var refNumber = document.getElementById('refNumber').value.trim();
+      var notes     = document.getElementById('notes').value.trim();
+
+      if (!address) {
+        Toast.error('Please enter your delivery address.');
+        document.getElementById('address').focus();
+        return;
+      }
+
+      if (!phone) {
+        Toast.error('Please enter your phone number.');
+        document.getElementById('phone').focus();
+        return;
+      }
+
+      // Validate Philippine phone number format
+      var phonePattern = /^(\+639|09|9)\d{9}$/;
+      var cleanPhone = phone.replace(/[\s-]/g, ''); // Remove spaces and dashes
+      
+      if (!phonePattern.test(cleanPhone)) {
+        Toast.error('Invalid phone number format. Use +639XXXXXXXXX, 09XXXXXXXXX, or 9XXXXXXXXX');
+        document.getElementById('phone').focus();
+        return;
+      }
+
+      if (!refNumber) {
+        Toast.error('Please enter your payment reference number.');
+        document.getElementById('refNumber').focus();
+        return;
+      }
+
+      // Stop polling BEFORE placing order
+      if (checkoutInterval) {
+        clearInterval(checkoutInterval);
+        checkoutInterval = null;
+      }
+
+      var btn = document.getElementById('placeOrderBtn');
+      btn.disabled    = true;
+      btn.textContent = 'Placing order…';
+
+      var res = await apiFetch('/checkout/', {
+        method: 'POST',
+        body: JSON.stringify({
+          address:          address,
+          phone:            cleanPhone,
+          payment_method:   payment,
+          reference_number: refNumber,
+          notes:            notes,
+        }),
+      });
+
+      if (res.ok) {
+        showSuccessScreen(res.data.order || res.data);
+        updateCartCount();
+      } else {
+        Toast.error((res.data && res.data.error) || 'Failed to place order. Please try again.');
+        btn.disabled    = false;
+        btn.textContent = '✓ Place Order';
+        // Restart polling if order failed
+        if (!checkoutInterval) {
+          checkoutInterval = setInterval(loadCheckoutData, 10000);
+        }
+      }
+    }
+
+    /* ── Success Screen ─────────────────────────── */
+    function showSuccessScreen(order) {
+      // Ensure polling is stopped (redundant safety check)
+      if (checkoutInterval) {
+        clearInterval(checkoutInterval);
+        checkoutInterval = null;
+      }
+      
+      var content = document.getElementById('checkoutContent');
+      content.innerHTML =
+        '<div class="card success-box">' +
+          '<div class="success-icon">✓</div>' +
+          '<h2>Order Placed Successfully!</h2>' +
+          '<p>Thank you! We\u2019ll start preparing your order right away.</p>' +
+          '<div class="order-ref">Order #' + (order && order.id ? order.id : '—') + '</div>' +
+          '<p style="color:var(--gray-text);font-size:0.85rem;margin-bottom:32px">' +
+            'Total: <strong style="color:var(--red)">' + formatPrice(order && order.total_price || cartTotal) + '</strong>' +
+          '</p>' +
+          '<div style="display:flex;gap:14px;justify-content:center;flex-wrap:wrap">' +
+            '<a href="orders.html" class="btn btn-primary">📦 View My Orders</a>' +
+            '<a href="product.html" class="btn btn-outline">Continue Shopping</a>' +
+          '</div>' +
+        '</div>';
+    }
+
+    initCheckout();
+  </script>
+</body>
+</html>

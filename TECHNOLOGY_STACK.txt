@@ -1,0 +1,472 @@
+================================================================================
+                    PRINT X - TECHNOLOGY STACK
+================================================================================
+
+PROJECT TYPE: Full-Stack 3D Printing E-Commerce Platform
+
+================================================================================
+                            FRONTEND
+================================================================================
+
+Language:
+---------
+- JavaScript (Vanilla JS - No Framework)
+  * Pure JavaScript without React, Vue, or Angular
+  * Direct DOM manipulation
+  * Event-driven architecture
+
+Markup:
+-------
+- HTML5
+  * Semantic HTML elements
+  * Modern HTML5 features
+  * Accessible markup
+
+Styling:
+--------
+- CSS3
+  * CSS Variables (Custom Properties)
+  * Flexbox and CSS Grid layouts
+  * Media queries for responsive design
+  * CSS animations and transitions
+  * clamp() for fluid typography
+  * Modern CSS features
+
+3D Rendering:
+-------------
+- Three.js (r128)
+  * STLLoader for 3D model preview
+  * OBJLoader for OBJ files
+  * ThreeMFLoader for 3MF files
+  * OrbitControls for camera manipulation
+  * WebGL rendering
+
+Frontend Architecture:
+----------------------
+- Single Page Application (SPA) approach
+- No build tools or bundlers
+- Direct script loading via CDN
+- Modular JavaScript functions
+- Event-driven programming
+
+================================================================================
+                            BACKEND
+================================================================================
+
+Language:
+---------
+- Python 3.13
+  * Modern Python features
+  * Type hints support
+  * Async capabilities
+
+Framework:
+----------
+- Django 4.x
+  * Full-featured web framework
+  * Built-in admin panel
+  * ORM (Object-Relational Mapping)
+  * Template engine (not used for API)
+  * Security features (CSRF, XSS protection)
+
+API Framework:
+--------------
+- Django REST Framework (DRF)
+  * RESTful API design
+  * Serializers for data validation
+  * ViewSets and API views
+  * Browsable API interface
+  * Content negotiation
+
+Authentication:
+---------------
+- djangorestframework-simplejwt
+  * JWT (JSON Web Tokens)
+  * Access token (1 hour lifetime)
+  * Refresh token (7 days lifetime)
+  * Token rotation and blacklisting
+  * Secure token-based authentication
+
+Additional Backend Libraries:
+------------------------------
+- django-cors-headers
+  * Cross-Origin Resource Sharing (CORS)
+  * Allows frontend on different port/domain
+  * Configurable allowed origins
+
+- django.core.mail
+  * Email sending functionality
+  * Gmail SMTP integration
+  * HTML email templates
+  * Async email sending via threading
+
+Backend Architecture:
+---------------------
+- Monolithic Django application
+- Modular app structure (api app)
+- RESTful API endpoints
+- JWT authentication middleware
+- Rate limiting on sensitive endpoints
+
+================================================================================
+                            DATABASE
+================================================================================
+
+Database System:
+----------------
+- SQLite3
+  * Lightweight file-based database
+  * Zero configuration
+  * ACID compliant
+  * Suitable for small to medium applications
+  * Database file: db.sqlite3
+
+ORM (Object-Relational Mapping):
+---------------------------------
+- Django ORM
+  * Python-based database queries
+  * Model-based schema definition
+  * Automatic SQL generation
+  * Migration system for schema changes
+  * QuerySet API for data retrieval
+
+Database Models:
+----------------
+- User (Django built-in)
+- Product
+- Cart
+- Order
+- Payment
+- CustomRequest
+- UserProfile
+- ProductReview
+- Category
+
+Migration System:
+-----------------
+- Django Migrations
+  * Version control for database schema
+  * Automatic migration generation
+  * Forward and backward migrations
+  * Migration files in api/migrations/
+
+================================================================================
+                        FILE STORAGE
+================================================================================
+
+Storage System:
+---------------
+- Local Filesystem
+  * Media files stored in /media/stl_files/
+  * Django FileField for file uploads
+  * Configurable MEDIA_ROOT and MEDIA_URL
+
+Supported File Types:
+---------------------
+- STL (Stereolithography)
+- OBJ (Wavefront Object)
+- 3MF (3D Manufacturing Format)
+- AMF (Additive Manufacturing File)
+- STEP (Standard for Exchange of Product Data)
+
+File Upload Limits:
+-------------------
+- Maximum file size: 50 MB
+- Maximum files per request: 5 files
+- File validation on upload
+
+================================================================================
+                    COMMUNICATION PROTOCOL
+================================================================================
+
+API Architecture:
+-----------------
+- RESTful API
+  * Resource-based URLs
+  * HTTP methods (GET, POST, PUT, PATCH, DELETE)
+  * JSON request/response format
+  * Stateless communication
+
+Data Format:
+------------
+- JSON (JavaScript Object Notation)
+  * Request body: JSON
+  * Response body: JSON
+  * Content-Type: application/json
+
+Authentication Flow:
+--------------------
+1. Client sends credentials to /api/login/
+2. Server validates and returns JWT tokens
+3. Client stores tokens in localStorage
+4. Client includes token in Authorization header
+5. Server validates token on each request
+6. Token refresh on expiration
+
+HTTP Status Codes:
+------------------
+- 200 OK: Successful request
+- 201 Created: Resource created
+- 400 Bad Request: Invalid data
+- 401 Unauthorized: Authentication required
+- 403 Forbidden: Permission denied
+- 404 Not Found: Resource not found
+- 500 Internal Server Error: Server error
+
+================================================================================
+                        SECURITY FEATURES
+================================================================================
+
+Authentication & Authorization:
+--------------------------------
+- JWT token-based authentication
+- Password hashing (PBKDF2 algorithm)
+- Token blacklisting on logout
+- Refresh token rotation
+- Admin-only endpoints (is_superuser check)
+
+Input Validation:
+-----------------
+- Django REST Framework serializers
+- File type validation (.stl, .obj, etc.)
+- File size limits (50 MB max)
+- Email format validation
+- Phone number format validation
+
+Protection Mechanisms:
+----------------------
+- CSRF protection (disabled for API, using JWT)
+- SQL injection protection (Django ORM)
+- XSS protection (HTML escaping)
+- Rate limiting (10 login attempts/min)
+- CORS configuration
+- Secure password requirements
+
+Data Privacy:
+-------------
+- Environment variables for sensitive data
+- Email credentials not hardcoded
+- Secret key in environment
+- No credentials in version control
+
+================================================================================
+                    DEVELOPMENT TOOLS
+================================================================================
+
+Package Management:
+-------------------
+- pip (Python Package Installer)
+- requirements.txt for dependencies
+
+Version Control:
+----------------
+- Git (implied by .gitignore presence)
+- GitHub (deployment target)
+
+Development Server:
+-------------------
+- Django development server
+- Runs on http://127.0.0.1:8000
+- Auto-reload on code changes
+- start_server.bat for Windows
+
+Email Testing:
+--------------
+- Console backend (development)
+- Gmail SMTP (production)
+- Environment variable switching
+
+================================================================================
+                    DEPLOYMENT STACK
+================================================================================
+
+Frontend Hosting:
+-----------------
+- GitHub Pages (static files)
+- Served from /docs/ directory
+- Custom domain support
+- HTTPS enabled
+
+Backend Hosting:
+----------------
+- Can be deployed to:
+  * Heroku
+  * AWS EC2
+  * DigitalOcean
+  * PythonAnywhere
+  * Any Python hosting service
+
+Database:
+---------
+- SQLite for development
+- Can migrate to:
+  * PostgreSQL (recommended for production)
+  * MySQL
+  * MariaDB
+  * Any Django-supported database
+
+Static Files:
+-------------
+- Served by Django in development
+- Should use CDN or static file server in production
+
+Media Files:
+------------
+- Local filesystem in development
+- Should use cloud storage in production:
+  * AWS S3
+  * Google Cloud Storage
+  * Azure Blob Storage
+
+================================================================================
+                    SYSTEM REQUIREMENTS
+================================================================================
+
+Server Requirements:
+--------------------
+- Python 3.8 or higher
+- 512 MB RAM minimum
+- 1 GB disk space minimum
+- Internet connection for email
+
+Client Requirements:
+--------------------
+- Modern web browser:
+  * Chrome 90+
+  * Firefox 88+
+  * Safari 14+
+  * Edge 90+
+- JavaScript enabled
+- WebGL support (for 3D preview)
+- LocalStorage enabled
+
+Network Requirements:
+---------------------
+- HTTP/HTTPS support
+- CORS-enabled server
+- Port 8000 for development
+- Port 587 for SMTP (email)
+
+================================================================================
+                    ARCHITECTURE PATTERN
+================================================================================
+
+Overall Architecture:
+---------------------
+- Client-Server Architecture
+- Three-tier architecture:
+  1. Presentation Layer (HTML/CSS/JS)
+  2. Application Layer (Django/DRF)
+  3. Data Layer (SQLite/Django ORM)
+
+Design Patterns:
+----------------
+- MVC (Model-View-Controller) - Django
+- Repository Pattern - Django ORM
+- Serializer Pattern - DRF
+- Middleware Pattern - Django middleware
+- Observer Pattern - Event listeners (JS)
+
+API Design:
+-----------
+- RESTful principles
+- Resource-oriented URLs
+- Stateless communication
+- JSON data format
+- HTTP methods for CRUD operations
+
+Frontend Pattern:
+-----------------
+- Module Pattern (JavaScript)
+- Event-driven architecture
+- Separation of concerns
+- Utility functions (Auth, Toast, etc.)
+- DOM manipulation
+
+================================================================================
+                    PERFORMANCE FEATURES
+================================================================================
+
+Frontend Optimization:
+----------------------
+- Lazy loading for images
+- Async JavaScript loading
+- CSS transitions (GPU accelerated)
+- Minimal external dependencies
+- Efficient DOM manipulation
+
+Backend Optimization:
+---------------------
+- Django ORM query optimization
+- select_related() for foreign keys
+- Database indexing (unique constraints)
+- Async email sending (threading)
+- Efficient serialization
+
+Caching:
+--------
+- Browser caching (static files)
+- LocalStorage for auth tokens
+- SessionStorage for cart selection
+
+Database Optimization:
+----------------------
+- Indexed fields (unique constraints)
+- Efficient queries (ORM)
+- Minimal database calls
+- Proper foreign key relationships
+
+================================================================================
+                    SCALABILITY CONSIDERATIONS
+================================================================================
+
+Current Limitations:
+--------------------
+- SQLite (single-file database)
+- Local file storage
+- Single-threaded Django dev server
+- No load balancing
+- No caching layer
+
+Production Recommendations:
+---------------------------
+- Migrate to PostgreSQL
+- Use cloud storage (S3)
+- Deploy with Gunicorn/uWSGI
+- Add Redis for caching
+- Implement CDN for static files
+- Use load balancer
+- Add database connection pooling
+- Implement task queue (Celery)
+
+================================================================================
+                    TECHNOLOGY SUMMARY
+================================================================================
+
+Frontend Stack:
+---------------
+HTML5 + CSS3 + Vanilla JavaScript + Three.js
+
+Backend Stack:
+--------------
+Python + Django + Django REST Framework + JWT
+
+Database Stack:
+---------------
+SQLite + Django ORM
+
+Communication:
+--------------
+RESTful API + JSON + JWT Authentication
+
+Architecture:
+-------------
+Client-Server + Three-Tier + RESTful + SPA
+
+Development:
+------------
+Git + pip + Django Dev Server + GitHub Pages
+
+================================================================================
+                    END OF TECHNOLOGY STACK DOCUMENTATION
+================================================================================
