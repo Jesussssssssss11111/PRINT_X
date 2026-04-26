@@ -1427,27 +1427,47 @@ def add_review(request, product_id):
         product = Product.objects.get(id=product_id)
     except Product.DoesNotExist:
         return Response({'error': 'Product not found.'}, status=status.HTTP_404_NOT_FOUND)
-    
+
+    # Check if user has purchased this product
+    user_orders = Order.objects.filter(
+        user=request.user,
+        status__in=['delivered', 'completed']
+    )
+    has_purchased = False
+    for order in user_orders:
+        try:
+            items = json.loads(order.items_snapshot or '[]')
+            for item in items:
+                if item.get('type') != 'custom' and str(item.get('id')) == str(product_id):
+                    has_purchased = True
+                    break
+        except (json.JSONDecodeError, TypeError):
+            pass
+        if has_purchased:
+            break
+
+    if not has_purchased:
+        return Response({'error': 'You can only review products you have purchased and received.'}, status=status.HTTP_403_FORBIDDEN)
+
     rating = request.data.get('rating')
     comment = request.data.get('comment', '').strip()
-    
+
     if not rating or not comment:
         return Response({'error': 'Rating and comment are required.'}, status=status.HTTP_400_BAD_REQUEST)
-    
+
     try:
         rating = int(rating)
         if rating < 1 or rating > 5:
             raise ValueError
     except (TypeError, ValueError):
         return Response({'error': 'Rating must be between 1 and 5.'}, status=status.HTTP_400_BAD_REQUEST)
-    
-    # Check if user already reviewed this product
+
     review, created = ProductReview.objects.update_or_create(
         user=request.user,
         product=product,
         defaults={'rating': rating, 'comment': comment}
     )
-    
+
     message = 'Review added successfully.' if created else 'Review updated successfully.'
     return Response({'message': message}, status=status.HTTP_201_CREATED if created else status.HTTP_200_OK)
 
