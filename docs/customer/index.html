@@ -383,10 +383,13 @@
         <div class="line"></div>
       </div>
       <div class="video-wrapper">
-        <video id="hero-video" autoplay loop playsinline controls>
-          <source src="vid/3d.mp4" type="video/mp4">
-          Your browser does not support HTML5 video.
-        </video>
+        <iframe
+          src="https://player.cloudinary.com/embed/?cloud_name=dghdohrjt&public_id=3d_uh0jjd&autoplay=true&loop=true&muted=true&controls=true"
+          width="100%"
+          style="aspect-ratio:16/9;border:none;display:block;background:#000;"
+          allow="autoplay; fullscreen; encrypted-media; picture-in-picture"
+          allowfullscreen
+        ></iframe>
       </div>
     </div>
   </section>
@@ -526,27 +529,6 @@
 
     loadFeaturedProducts();
 
-    // Auto-mute video when scrolling away from video section
-    const video = document.getElementById('hero-video');
-    const videoSection = document.querySelector('.video-section');
-    
-    if (video && videoSection) {
-      const observer = new IntersectionObserver((entries) => {
-        entries.forEach(entry => {
-          if (entry.isIntersecting) {
-            // Video section is visible - unmute
-            video.muted = false;
-          } else {
-            // Video section is not visible - mute
-            video.muted = true;
-          }
-        });
-      }, {
-        threshold: 0.5 // Trigger when 50% of video section is visible
-      });
-      
-      observer.observe(videoSection);
-    }
   </script>
 </body>
 </html>
