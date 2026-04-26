@@ -5,7 +5,7 @@
 
 const API_BASE = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
   ? 'http://127.0.0.1:8000/api'
-  : 'https://printx-backend.onrender.com/api';
+  : 'https://print-x-backend-5yzm.onrender.com/api';
 
 /* ── Auth Helpers ────────────────────────────────────────*/
 const Auth = {

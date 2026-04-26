@@ -154,19 +154,16 @@ CORS_ALLOW_HEADERS = [
 
 CORS_ALLOW_METHODS = ['DELETE', 'GET', 'OPTIONS', 'PATCH', 'POST', 'PUT']
 
-RENDER_BACKEND_URL = os.environ.get('RENDER_BACKEND_URL', '')
-
 CORS_ALLOWED_ORIGINS = [
     'http://localhost:3000',
     'http://127.0.0.1:3000',
     'http://localhost:8000',
     'http://127.0.0.1:8000',
     'https://jesussssssssss11111.github.io',
+    'https://print-x-backend-5yzm.onrender.com',
 ]
-if RENDER_BACKEND_URL:
-    CORS_ALLOWED_ORIGINS.append(RENDER_BACKEND_URL)
 
-CORS_ALLOW_ALL_ORIGINS = not bool(RENDER_BACKEND_URL)
+CORS_ALLOW_ALL_ORIGINS = False
 
 CSRF_TRUSTED_ORIGINS = [
     'http://localhost:3000',
@@ -174,9 +171,8 @@ CSRF_TRUSTED_ORIGINS = [
     'http://localhost:8000',
     'http://127.0.0.1:8000',
     'https://jesussssssssss11111.github.io',
+    'https://print-x-backend-5yzm.onrender.com',
 ]
-if RENDER_BACKEND_URL:
-    CSRF_TRUSTED_ORIGINS.append(RENDER_BACKEND_URL)
 
 # ── File upload limits ──────────────────────────────────────────────────────
 DATA_UPLOAD_MAX_MEMORY_SIZE = 52428800   # 50 MB
