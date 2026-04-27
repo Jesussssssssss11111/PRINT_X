@@ -501,13 +501,10 @@
       entries.forEach(entry => {
         const iframe = entry.target.querySelector('iframe');
         if (!iframe) return;
-        const src = iframe.src;
         if (entry.isIntersecting) {
-          if (!src.includes('autoplay=true')) {
-            iframe.src = src.replace('autoplay=false', 'autoplay=true');
-          }
+          iframe.src = 'https://player.cloudinary.com/embed/?cloud_name=dghdohrjt&public_id=printing_joches&autoplay=true&loop=true&muted=true&controls=true';
         } else {
-          iframe.src = src.replace('autoplay=true', 'autoplay=false');
+          iframe.src = 'https://player.cloudinary.com/embed/?cloud_name=dghdohrjt&public_id=printing_joches&autoplay=false&loop=true&muted=true&controls=true';
         }
       });
     }, { threshold: 0.4 });
