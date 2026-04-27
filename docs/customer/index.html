@@ -497,6 +497,26 @@
 
   <script src="../assets/js/script.js"></script>
   <script>
+    const videoObserver = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        const iframe = entry.target.querySelector('iframe');
+        if (!iframe) return;
+        const src = iframe.src;
+        if (entry.isIntersecting) {
+          if (!src.includes('autoplay=true')) {
+            iframe.src = src.replace('autoplay=false', 'autoplay=true');
+          }
+        } else {
+          iframe.src = src.replace('autoplay=true', 'autoplay=false');
+        }
+      });
+    }, { threshold: 0.4 });
+
+    document.addEventListener('DOMContentLoaded', () => {
+      const videoSection = document.querySelector('.video-section');
+      if (videoSection) videoObserver.observe(videoSection);
+    });
+
     async function loadFeaturedProducts() {
       const grid = document.getElementById('featured-products');
       try {
