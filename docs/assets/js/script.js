@@ -224,7 +224,7 @@ function renderNavbar(activePage = '') {
   navbar.innerHTML = `
     <div class="nav-container">
       <a href="${pages.home}" class="nav-logo">
-        <div class="nav-logo-icon">⬡</div>
+        <img src="${base}favicon.png" alt="Print X" style="width:28px;height:28px;object-fit:contain;">
         PRINT<span>X</span>
       </a>
       <nav class="nav-links" id="navLinks">${navLinksHtml}</nav>
@@ -327,7 +327,7 @@ function renderFooter() {
       <div class="footer-grid">
         <div class="footer-brand">
           <a href="${base}customer/index.html" class="nav-logo" style="text-decoration:none">
-            <div class="nav-logo-icon">⬡</div>
+            <img src="${base}favicon.png" alt="Print X" style="width:28px;height:28px;object-fit:contain;">
             PRINT<span style="color:var(--red)">X</span>
           </a>
           <p>Modern 3D printing service that turns digital designs into real-world objects. Based in the Philippines. Built with precision.</p>
