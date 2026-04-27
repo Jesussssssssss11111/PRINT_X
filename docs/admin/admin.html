@@ -892,45 +892,6 @@ Auth.clearSession = function() {
 };
 Auth.logout = function() { this.clearSession(); };
 
-  async function apiFetch(endpoint, options = {}, isFormData = false, _retry = false) {
-  const token = Auth.getAccess(); // uses px_admin_access
-  const headers = {
-    ...(token ? { Authorization: `Bearer ${token}` } : {}),
-    ...options.headers,
-  };
-  if (!isFormData) headers['Content-Type'] = 'application/json';
-
-  try {
-    const res = await fetch(`${API_BASE}${endpoint}`, { ...options, headers });
-
-    if (res.status === 401 && !_retry) {
-      const refresh = Auth.getRefresh();
-      if (refresh) {
-        const r = await fetch(`${API_BASE}/token/refresh/`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ refresh }),
-        });
-        if (r.ok) {
-          const d = await r.json();
-          localStorage.setItem('px_admin_access', d.access);
-          return apiFetch(endpoint, options, isFormData, true);
-        }
-      }
-      Auth.clearSession();
-      location.reload();
-      return { ok: false, status: 401, data: {} };
-    }
-
-    const contentType = res.headers.get('content-type') || '';
-    const data = contentType.includes('application/json') ? await res.json() : await res.text();
-    return { ok: res.ok, status: res.status, data };
-  } catch (err) {
-    console.error('apiFetch error:', err);
-    return { ok: false, status: 0, data: { error: 'Network error.' } };
-  }
-}
-
 /* ═══════════════════════════════════
    PRINT X — Admin Panel JavaScript
    ═══════════════════════════════════ */
